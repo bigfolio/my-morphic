@@ -1,4 +1,4 @@
-"use client"; // Mark as client component
+"use client"; // Must be at the very top
 
 import { useState } from 'react';
 import Head from 'next/head';
@@ -16,8 +16,9 @@ export default function MorphicAISearch() {
   const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
 
   const toggleTheme = () => {
-    setIsDarkMode(!isDarkMode);
-    document.documentElement.setAttribute('data-theme', isDarkMode ? 'light' : 'dark');
+    const newMode = !isDarkMode;
+    setIsDarkMode(newMode);
+    document.documentElement.setAttribute('data-theme', newMode ? 'dark' : 'light');
   };
 
   const handleSearch = async () => {
@@ -27,7 +28,6 @@ export default function MorphicAISearch() {
     setResults([]);
 
     try {
-      // Replace with your actual API endpoint
       const response = await fetch(
         `https://my-morphic-alpha.vercel.app/api/search?q=${encodeURIComponent(query)}`
       );
@@ -97,13 +97,11 @@ export default function MorphicAISearch() {
       </main>
 
       <footer>
-        <p>Powered by Morphic AI on Vercel | © 2023</p>
+        <p>Powered by Morphic AI on Vercel | © {new Date().getFullYear()}</p>
       </footer>
 
-      <style jsx>{`
-        /* Paste all CSS from the previous HTML example here */
-        /* Ensure you replace :root with .light and .dark classes */
-        .light {
+      <style jsx global>{`
+        :root {
           --primary: #7c3aed;
           --secondary: #a78bfa;
           --text: #1f2937;
@@ -112,7 +110,7 @@ export default function MorphicAISearch() {
           --shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
         }
 
-        .dark {
+        [data-theme="dark"] {
           --primary: #8b5cf6;
           --secondary: #c4b5fd;
           --text: #e5e7eb;
@@ -121,14 +119,159 @@ export default function MorphicAISearch() {
           --shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
         }
 
-        /* Rest of the CSS remains the same */
         body {
           background: var(--bg);
           color: var(--text);
           min-height: 100vh;
           line-height: 1.6;
+          margin: 0;
+          padding: 0;
+          transition: background 0.3s ease, color 0.3s ease;
         }
-        /* ... */
+
+        .container {
+          max-width: 1200px;
+          margin: 0 auto;
+          padding: 2rem;
+        }
+
+        header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 3rem;
+        }
+
+        .logo {
+          font-size: 1.8rem;
+          font-weight: 700;
+          color: var(--primary);
+        }
+
+        .theme-toggle {
+          background: none;
+          border: none;
+          color: var(--text);
+          cursor: pointer;
+          font-size: 1.2rem;
+        }
+
+        .hero {
+          text-align: center;
+          margin-bottom: 3rem;
+        }
+
+        h1 {
+          font-size: 3rem;
+          margin-bottom: 1rem;
+          background: linear-gradient(to right, var(--primary), var(--secondary));
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+          font-size: 1.2rem;
+          opacity: 0.8;
+          margin-bottom: 2rem;
+        }
+
+        .search-box {
+          max-width: 600px;
+          margin: 0 auto;
+          position: relative;
+        }
+
+        #searchInput {
+          width: 100%;
+          padding: 1rem 1.5rem;
+          border: 2px solid var(--card-bg);
+          border-radius: 50px;
+          font-size: 1rem;
+          background: var(--card-bg);
+          color: var(--text);
+          outline: none;
+          transition: all 0.3s;
+        }
+
+        #searchInput:focus {
+          border-color: var(--primary);
+          box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2);
+        }
+
+        #searchButton {
+          position: absolute;
+          right: 8px;
+          top: 8px;
+          background: linear-gradient(to right, var(--primary), var(--secondary));
+          color: white;
+          border: none;
+          border-radius: 50px;
+          padding: 0.6rem 1.5rem;
+          cursor: pointer;
+          font-weight: 600;
+          transition: transform 0.2s;
+        }
+
+        #searchButton:hover {
+          transform: translateY(-2px);
+        }
+
+        .results {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+          gap: 1.5rem;
+          margin-top: 2rem;
+        }
+
+        .result-card {
+          background: var(--card-bg);
+          border-radius: 12px;
+          padding: 1.5rem;
+          box-shadow: var(--shadow);
+          border-left: 4px solid var(--primary);
+          transition: transform 0.3s;
+        }
+
+        .result-card:hover {
+          transform: translateY(-5px);
+        }
+
+        .result-title {
+          color: var(--primary);
+          margin-bottom: 0.5rem;
+          font-size: 1.2rem;
+        }
+
+        .loading {
+          text-align: center;
+          margin: 2rem 0;
+        }
+
+        .spinner {
+          border: 4px solid rgba(0, 0, 0, 0.1);
+          border-left-color: var(--primary);
+          border-radius: 50%;
+          width: 30px;
+          height: 30px;
+          animation: spin 1s linear infinite;
+          margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+
+        footer {
+          text-align: center;
+          margin-top: 4rem;
+          opacity: 0.7;
+          font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+          h1 { font-size: 2rem; }
+          .container { padding: 1.5rem; }
+        }
       `}</style>
     </div>
   );
