@@ -1,6 +1,6 @@
-"use client"; // Must be at the very top
+'use client'; // MUST be the very first line
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Head from 'next/head';
 
 interface SearchResult {
@@ -15,10 +15,19 @@ export default function MorphicAISearch() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
 
+  // Initialize theme on component mount
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    setIsDarkMode(savedTheme === 'dark');
+    document.documentElement.setAttribute('data-theme', savedTheme);
+  }, []);
+
   const toggleTheme = () => {
     const newMode = !isDarkMode;
     setIsDarkMode(newMode);
-    document.documentElement.setAttribute('data-theme', newMode ? 'dark' : 'light');
+    const themeValue = newMode ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', themeValue);
+    localStorage.setItem('theme', themeValue);
   };
 
   const handleSearch = async () => {
@@ -29,7 +38,7 @@ export default function MorphicAISearch() {
 
     try {
       const response = await fetch(
-        `https://my-morphic-alpha.vercel.app/api/search?q=${encodeURIComponent(query)}`
+        `/api/search?q=${encodeURIComponent(query)}`
       );
       const data: SearchResult[] = await response.json();
       setResults(data);
@@ -41,7 +50,7 @@ export default function MorphicAISearch() {
   };
 
   return (
-    <div className={`container ${isDarkMode ? 'dark' : 'light'}`}>
+    <div className="container">
       <Head>
         <title>Morphic AI | Intelligent Search</title>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
@@ -66,7 +75,7 @@ export default function MorphicAISearch() {
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
               placeholder="Search for anything..."
             />
             <button id="searchButton" onClick={handleSearch}>
@@ -91,7 +100,7 @@ export default function MorphicAISearch() {
               </div>
             ))
           ) : (
-            !isLoading && <p style={{ gridColumn: '1/-1' }}>No results found. Try a different query.</p>
+            !isLoading && <p className="no-results">No results found. Try a different query.</p>
           )}
         </div>
       </main>
@@ -123,18 +132,21 @@ export default function MorphicAISearch() {
           background: var(--bg);
           color: var(--text);
           min-height: 100vh;
-          line-height: 1.6;
           margin: 0;
-          padding: 0;
-          transition: background 0.3s ease, color 0.3s ease;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+          line-height: 1.6;
+          transition: background-color 0.3s, color 0.3s;
         }
 
         .container {
           max-width: 1200px;
           margin: 0 auto;
           padding: 2rem;
+          min-height: 100vh;
         }
+      `}</style>
 
+      <style jsx>{`
         header {
           display: flex;
           justify-content: space-between;
@@ -146,6 +158,9 @@ export default function MorphicAISearch() {
           font-size: 1.8rem;
           font-weight: 700;
           color: var(--primary);
+          background: linear-gradient(to right, var(--primary), var(--secondary));
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
         }
 
         .theme-toggle {
@@ -154,6 +169,7 @@ export default function MorphicAISearch() {
           color: var(--text);
           cursor: pointer;
           font-size: 1.2rem;
+          padding: 0.5rem;
         }
 
         .hero {
@@ -173,6 +189,7 @@ export default function MorphicAISearch() {
           font-size: 1.2rem;
           opacity: 0.8;
           margin-bottom: 2rem;
+          color: var(--text);
         }
 
         .search-box {
@@ -181,7 +198,7 @@ export default function MorphicAISearch() {
           position: relative;
         }
 
-        #searchInput {
+        input {
           width: 100%;
           padding: 1rem 1.5rem;
           border: 2px solid var(--card-bg);
@@ -193,7 +210,7 @@ export default function MorphicAISearch() {
           transition: all 0.3s;
         }
 
-        #searchInput:focus {
+        input:focus {
           border-color: var(--primary);
           box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2);
         }
@@ -214,6 +231,25 @@ export default function MorphicAISearch() {
 
         #searchButton:hover {
           transform: translateY(-2px);
+        }
+
+        .loading {
+          text-align: center;
+          margin: 2rem 0;
+        }
+
+        .spinner {
+          border: 4px solid rgba(0, 0, 0, 0.1);
+          border-left-color: var(--primary);
+          border-radius: 50%;
+          width: 30px;
+          height: 30px;
+          animation: spin 1s linear infinite;
+          margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+          to { transform: rotate(360deg); }
         }
 
         .results {
@@ -242,23 +278,10 @@ export default function MorphicAISearch() {
           font-size: 1.2rem;
         }
 
-        .loading {
+        .no-results {
+          grid-column: 1 / -1;
           text-align: center;
-          margin: 2rem 0;
-        }
-
-        .spinner {
-          border: 4px solid rgba(0, 0, 0, 0.1);
-          border-left-color: var(--primary);
-          border-radius: 50%;
-          width: 30px;
-          height: 30px;
-          animation: spin 1s linear infinite;
-          margin: 0 auto 1rem;
-        }
-
-        @keyframes spin {
-          to { transform: rotate(360deg); }
+          color: var(--text);
         }
 
         footer {
@@ -266,11 +289,17 @@ export default function MorphicAISearch() {
           margin-top: 4rem;
           opacity: 0.7;
           font-size: 0.9rem;
+          color: var(--text);
         }
 
         @media (max-width: 768px) {
-          h1 { font-size: 2rem; }
-          .container { padding: 1.5rem; }
+          h1 {
+            font-size: 2rem;
+          }
+          
+          .container {
+            padding: 1.5rem;
+          }
         }
       `}</style>
     </div>
