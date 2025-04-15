@@ -47,7 +47,8 @@
       "providerId": "openai",
       "enabled": true,
       "toolCallType": "native"
-    },
+    }
+    <!--,
     {
       "id": "claude-3-7-sonnet-20250219",
       "name": "Claude 3.7 Sonnet",
@@ -208,5 +209,6 @@
       "enabled": true,
       "toolCallType": "native"
     }
+    -->
   ]
 }
