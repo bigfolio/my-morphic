@@ -34,7 +34,7 @@ export async function POST(req) {
       status: 500,
       headers: {
         'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*', // Allow all origins
+        'Access-Control-Allow-Origin': 'https://trendyline.net', // Allow all origins
       },
     });
   }
