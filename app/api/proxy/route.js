@@ -11,7 +11,7 @@ export async function POST(req) {
     const { query } = await req.json();
 
     const response = await fetch(
-      'https://my-morphic-take2-km7tjbgbq-bigfolio1s-projects.vercel.app/search?q=' + encodeURIComponent(query)
+      'https://my-morphic-alpha.vercel.app/search?q=' + encodeURIComponent(query)
     );
 
     const data = await response.json();
