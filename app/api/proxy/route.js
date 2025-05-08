@@ -9,49 +9,29 @@ export async function POST(req) {
   try {
     const { query, id } = await req.json();
 
-    // Fallback to a random chat ID if not provided
     const chatId = id || `chat-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
     const url = `https://my-morphic-alpha.vercel.app/api/chat`;
-    const body = JSON.stringify({
-      messages: [{ role: 'user', content: query }],
-      id: chatId
-    });
 
-    const response = await fetch(url, {
+    const upstreamResponse = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body
+      body: JSON.stringify({
+        messages: [{ role: 'user', content: query }],
+        id: chatId,
+      }),
     });
 
-    const text = await response.text();
-
-    try {
-      const data = JSON.parse(text);
-      return new Response(JSON.stringify(data), {
-        status: 200,
-        headers: {
-          ...corsHeaders,
-          'Content-Type': 'application/json',
-        },
-      });
-    } catch (jsonErr) {
-      return new Response(
-        JSON.stringify({
-          error: 'Invalid JSON from upstream',
-          preview: text.slice(0, 300),
-        }),
-        {
-          status: 502,
-          headers: {
-            ...corsHeaders,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-    }
+    // Directly stream the response
+    return new Response(upstreamResponse.body, {
+      status: upstreamResponse.status,
+      headers: {
+        ...corsHeaders,
+        'Content-Type': upstreamResponse.headers.get('Content-Type') || 'application/octet-stream',
+      },
+    });
   } catch (err) {
     return new Response(
       JSON.stringify({ error: 'Proxy failed', message: err.message }),
