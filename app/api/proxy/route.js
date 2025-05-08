@@ -9,7 +9,7 @@ export async function POST(req) {
   try {
     const { query } = await req.json();
 
-    const url = `https://my-morphic-alpha.vercel.app/search?q=${encodeURIComponent(query)}`;
+    const url = `https://my-morphic-alpha.vercel.app/api/chat`;
 
     const response = await fetch(url);
 
