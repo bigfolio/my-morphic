@@ -1,3 +1,9 @@
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type',
+};
+
 export async function OPTIONS() {
   return new Response(null, {
     status: 204,
@@ -11,12 +17,16 @@ export async function POST(req) {
 
     const url = `https://my-morphic-alpha.vercel.app/api/chat`;
 
-    const response = await fetch(url);
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query }),
+    });
 
-    const text = await response.text(); // Don't parse as JSON yet
+    const text = await response.text(); // Always read as text first
 
     try {
-      const data = JSON.parse(text); // Now try parsing
+      const data = JSON.parse(text); // Try parsing as JSON
       return new Response(JSON.stringify(data), {
         status: 200,
         headers: {
@@ -28,7 +38,7 @@ export async function POST(req) {
       return new Response(
         JSON.stringify({
           error: 'Invalid JSON from upstream',
-          body: text.slice(0, 300), // send preview of what we got
+          preview: text.slice(0, 300),
         }),
         {
           status: 502,
@@ -41,7 +51,10 @@ export async function POST(req) {
     }
   } catch (err) {
     return new Response(
-      JSON.stringify({ error: 'Proxy failed', message: err.message }),
+      JSON.stringify({
+        error: 'Proxy failed',
+        message: err.message,
+      }),
       {
         status: 500,
         headers: {
@@ -52,9 +65,3 @@ export async function POST(req) {
     );
   }
 }
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
-};
