@@ -1,9 +1,3 @@
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
-};
-
 export async function OPTIONS() {
   return new Response(null, {
     status: 204,
@@ -13,20 +7,29 @@ export async function OPTIONS() {
 
 export async function POST(req) {
   try {
-    const { query } = await req.json();
+    const { query, id } = await req.json();
+
+    // Fallback to a random chat ID if not provided
+    const chatId = id || `chat-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
     const url = `https://my-morphic-alpha.vercel.app/api/chat`;
+    const body = JSON.stringify({
+      messages: [{ role: 'user', content: query }],
+      id: chatId
+    });
 
     const response = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query }),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body
     });
 
-    const text = await response.text(); // Always read as text first
+    const text = await response.text();
 
     try {
-      const data = JSON.parse(text); // Try parsing as JSON
+      const data = JSON.parse(text);
       return new Response(JSON.stringify(data), {
         status: 200,
         headers: {
@@ -51,10 +54,7 @@ export async function POST(req) {
     }
   } catch (err) {
     return new Response(
-      JSON.stringify({
-        error: 'Proxy failed',
-        message: err.message,
-      }),
+      JSON.stringify({ error: 'Proxy failed', message: err.message }),
       {
         status: 500,
         headers: {
@@ -65,3 +65,9 @@ export async function POST(req) {
     );
   }
 }
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type',
+};
