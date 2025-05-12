@@ -6,18 +6,29 @@ import { cookies } from 'next/headers'
 
 export const maxDuration = 30
 
+// ✅ Change model to GPT-4-turbo
 const DEFAULT_MODEL: Model = {
-  id: 'gpt-4o-mini',
-  name: 'GPT-4o mini',
+  id: 'gpt-4-turbo',  // switched to GPT-4-turbo
+  name: 'GPT-4-turbo',
   provider: 'OpenAI',
   providerId: 'openai',
   enabled: true,
   toolCallType: 'native'
 }
 
+// ✅ This is your new system prompt
+const SYSTEM_PROMPT = {
+  role: 'system',
+  content:
+    `You are a highly intelligent AI assistant. 
+    Respond with clear, direct, informative answers — even when the user only types one word. 
+    Do not ask for clarification. Do not ask questions. Just explain the concept clearly. 
+    Keep the tone confident and helpful.`
+}
+
 export async function POST(req: Request) {
   try {
-    const { messages, id: chatId } = await req.json()
+    const { messages: incomingMessages, id: chatId } = await req.json()
     const referer = req.headers.get('referer')
     const isSharePage = referer?.includes('/share/')
 
@@ -56,6 +67,12 @@ export async function POST(req: Request) {
     }
 
     const supportsToolCalling = selectedModel.toolCallType === 'native'
+
+    // ✅ Inject system prompt
+    const messages = [SYSTEM_PROMPT, ...incomingMessages]
+
+    // ✅ Log the actual payload being sent
+    console.log('🔍 Sending messages to OpenAI:', JSON.stringify(messages, null, 2))
 
     return supportsToolCalling
       ? createToolCallingStreamResponse({
