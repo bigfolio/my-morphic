@@ -11,38 +11,39 @@ export async function POST(req) {
 
     const chatId = id || `chat-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
-    const url = `https://my-morphic-alpha.vercel.app/api/chat`;
+    const messages = [
+      {
+        role: 'system',
+        content: `IMPORTANT: You must always provide a complete, informative, and confident answer to every query — even if the input is a single word or vague.
 
-    const systemPrompt = {
-      role: 'system',
-      content: `Always answer every query in a complete, informative, and confident way, regardless of how short or vague the input is.
-
-If the user enters a single word, respond with:
-- A clear definition
-- Contextual explanation
-- Real-world examples
+For example, if the input is "Acne", explain:
+- What acne is (definition)
+- Why it occurs (context)
+- Different types
+- Treatments
 - Related concepts
 
-NEVER ask the user to clarify or provide more details.
+NEVER ask for clarification. NEVER say “I need more info.” Assume the user wants everything you can tell them. You are a brilliant explainer AI.`
+      },
+      {
+        role: 'user',
+        content: query
+      }
+    ];
 
-You are an expert explainer AI built to be helpful, engaging, and detailed in your answers.`,
-    };
+    // ✅ Log the payload to verify it's correct
+    console.log('Sending messages to chat endpoint:', JSON.stringify({ messages, id: chatId }, null, 2));
+
+    const url = `https://my-morphic-alpha.vercel.app/api/chat`;
 
     const upstreamResponse = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        messages: [
-          systemPrompt,
-          { role: 'user', content: query }
-        ],
-        id: chatId,
-      }),
+      body: JSON.stringify({ messages, id: chatId }),
     });
 
-    // Directly stream the response back to the frontend
     return new Response(upstreamResponse.body, {
       status: upstreamResponse.status,
       headers: {
@@ -63,6 +64,7 @@ You are an expert explainer AI built to be helpful, engaging, and detailed in yo
     );
   }
 }
+
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
