@@ -6,9 +6,9 @@ import { cookies } from 'next/headers'
 
 export const maxDuration = 30
 
-// ✅ Change model to GPT-4-turbo
+// Updated to use GPT-4-turbo
 const DEFAULT_MODEL: Model = {
-  id: 'gpt-4-turbo',  // switched to GPT-4-turbo
+  id: 'gpt-4-turbo',
   name: 'GPT-4-turbo',
   provider: 'OpenAI',
   providerId: 'openai',
@@ -16,14 +16,13 @@ const DEFAULT_MODEL: Model = {
   toolCallType: 'native'
 }
 
-// ✅ This is your new system prompt
+// System prompt that avoids asking for clarification
 const SYSTEM_PROMPT = {
   role: 'system',
   content:
-    `You are a highly intelligent AI assistant. 
-    Respond with clear, direct, informative answers — even when the user only types one word. 
-    Do not ask for clarification. Do not ask questions. Just explain the concept clearly. 
-    Keep the tone confident and helpful.`
+    `You are an intelligent assistant. Provide direct, relevant, and informative responses without asking for clarification. 
+    If a single word is provided, give a complete explanation of that term based on known data. 
+    Do not ask the user for more details or clarification. Your answers should always be clear, direct, and useful.`
 }
 
 export async function POST(req: Request) {
@@ -68,10 +67,10 @@ export async function POST(req: Request) {
 
     const supportsToolCalling = selectedModel.toolCallType === 'native'
 
-    // ✅ Inject system prompt
+    // ✅ Prepend SYSTEM_PROMPT to enforce direct responses
     const messages = [SYSTEM_PROMPT, ...incomingMessages]
 
-    // ✅ Log the actual payload being sent
+    // ✅ Log the actual payload being sent for debugging
     console.log('🔍 Sending messages to OpenAI:', JSON.stringify(messages, null, 2))
 
     return supportsToolCalling
