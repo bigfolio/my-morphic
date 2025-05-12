@@ -11,24 +11,34 @@ export async function POST(req) {
 
     const chatId = id || `chat-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
-    const body = JSON.stringify({
-  messages: [
-    { role: 'system', content: "IMPORTANT: You must always provide a complete, informative, and confident answer to every query — even if the input is a single word or vague..." },
-    { role: 'user', content: query }
-  ],
-  id: chatId
-});
-
-console.log('Sending to AI:', body); // <- Add this
-
     const url = `https://my-morphic-alpha.vercel.app/api/chat`;
+
+    // ✅ Define messages with system prompt
+    const messages = [
+      {
+        role: 'system',
+        content: `You are a direct, informative AI assistant. 
+Your job is to immediately and confidently explain or expand on the user's query — even if it's just one word — without asking follow-up questions. 
+If the word is a topic, provide a clear, concise, and insightful explanation. Be helpful and proactive. 
+Do not ever reply with requests for clarification or say the query is too broad.`,
+      },
+      {
+        role: 'user',
+        content: query
+      }
+    ];
+
+    console.log('📤 Sending messages to upstream AI:', messages); // ✅ Log the payload
 
     const upstreamResponse = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ messages, id: chatId }),
+      body: JSON.stringify({
+        messages,
+        id: chatId,
+      }),
     });
 
     return new Response(upstreamResponse.body, {
@@ -38,6 +48,7 @@ console.log('Sending to AI:', body); // <- Add this
         'Content-Type': upstreamResponse.headers.get('Content-Type') || 'application/octet-stream',
       },
     });
+
   } catch (err) {
     return new Response(
       JSON.stringify({ error: 'Proxy failed', message: err.message }),
@@ -51,6 +62,7 @@ console.log('Sending to AI:', body); // <- Add this
     );
   }
 }
+
 
 
 const corsHeaders = {
