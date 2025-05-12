@@ -1,3 +1,9 @@
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type',
+};
+
 export async function OPTIONS() {
   return new Response(null, {
     status: 204,
@@ -6,29 +12,31 @@ export async function OPTIONS() {
 }
 
 export async function POST(req) {
+  console.log('🔄 Proxy POST called');
+
   try {
     const { query, id } = await req.json();
 
+    console.log('📥 Incoming query:', query);
+
     const chatId = id || `chat-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
+    const systemPrompt = {
+      role: 'system',
+      content:
+        `You are a highly intelligent AI assistant. Respond with clear, direct, informative answers — even when the user only types one word. Do not ask for clarification. Do not ask questions. Just explain the concept clearly. Keep the tone confident and helpful.`,
+    };
+
+    const userPrompt = {
+      role: 'user',
+      content: query,
+    };
+
+    const messages = [systemPrompt, userPrompt];
+
+    console.log('📤 Forwarding messages array to /api/chat:\n', JSON.stringify(messages, null, 2));
+
     const url = `https://my-morphic-alpha.vercel.app/api/chat`;
-
-    // ✅ Define messages with system prompt
-    const messages = [
-      {
-        role: 'system',
-        content: `You are a direct, informative AI assistant. 
-Your job is to immediately and confidently explain or expand on the user's query — even if it's just one word — without asking follow-up questions. 
-If the word is a topic, provide a clear, concise, and insightful explanation. Be helpful and proactive. 
-Do not ever reply with requests for clarification or say the query is too broad.`,
-      },
-      {
-        role: 'user',
-        content: query
-      }
-    ];
-
-    console.log('📤 Sending messages to upstream AI:', messages); // ✅ Log the payload
 
     const upstreamResponse = await fetch(url, {
       method: 'POST',
@@ -41,6 +49,11 @@ Do not ever reply with requests for clarification or say the query is too broad.
       }),
     });
 
+    if (!upstreamResponse.ok) {
+      const errorText = await upstreamResponse.text();
+      console.error('❌ Error from /api/chat:', errorText);
+    }
+
     return new Response(upstreamResponse.body, {
       status: upstreamResponse.status,
       headers: {
@@ -48,8 +61,9 @@ Do not ever reply with requests for clarification or say the query is too broad.
         'Content-Type': upstreamResponse.headers.get('Content-Type') || 'application/octet-stream',
       },
     });
-
   } catch (err) {
+    console.error('🚨 Proxy failed:', err);
+
     return new Response(
       JSON.stringify({ error: 'Proxy failed', message: err.message }),
       {
@@ -62,11 +76,3 @@ Do not ever reply with requests for clarification or say the query is too broad.
     );
   }
 }
-
-
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
-};
