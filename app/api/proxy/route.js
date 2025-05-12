@@ -19,8 +19,18 @@ export async function POST(req) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        messages: [{ role: 'user', content: query }],
-        id: chatId,
+  messages: [
+    {
+      role: 'system',
+      content:
+        'You are a helpful AI explainer. When the user types a single word or phrase, provide a rich, easy-to-understand explanation. Include definitions, key facts, examples, and related concepts or questions. Format your answer using Markdown headings like ## Definition, ## Key Facts, etc.',
+    },
+    {
+      role: 'user',
+      content: query,
+    }
+  ],
+  id: chatId,
       }),
     });
 
