@@ -32,7 +32,7 @@ NEVER ask for clarification. NEVER say “I need more info.” Assume the user w
     ];
 
     // ✅ Log the payload to verify it's correct
-    console.log('Sending messages to chat endpoint:', JSON.stringify({ messages, id: chatId }, null, 2));
+    console.log('Sending to AI:', body); // <- Add this
 
     const url = `https://my-morphic-alpha.vercel.app/api/chat`;
 
