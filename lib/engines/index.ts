@@ -1,0 +1,1 @@
+export { getSearxResults } from './getSearxResults'
