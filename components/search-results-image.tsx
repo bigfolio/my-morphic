@@ -63,14 +63,18 @@ export const SearchResultsImageSection: React.FC<
   // If enabled the include_images_description is true, the images will be an array of { url: string, description: string }
   // Otherwise, the images will be an array of strings
   let convertedImages: { url: string; description: string }[] = []
-  if (typeof images[0] === 'string') {
-    convertedImages = (images as string[]).map(image => ({
-      url: image,
-      description: ''
-    }))
-  } else {
-    convertedImages = images as { url: string; description: string }[]
-  }
+convertedImages = images
+  .map(image => {
+    if (typeof image === 'string') {
+      return { url: image, description: '' }
+    }
+
+    return {
+      url: image.img_src || image.url || '',
+      description: image.title || ''
+    }
+  })
+  .filter(image => !!image.url) // Remove any with missing URL
 
   return (
     <div className="flex flex-wrap gap-2">
