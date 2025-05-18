@@ -6,7 +6,6 @@ import { cookies } from 'next/headers'
 
 export const maxDuration = 30
 
-// Updated to use GPT-4-turbo
 const DEFAULT_MODEL: Model = {
   id: 'gpt-4-turbo',
   name: 'GPT-4-turbo',
@@ -16,13 +15,12 @@ const DEFAULT_MODEL: Model = {
   toolCallType: 'native'
 }
 
-// System prompt that avoids asking for clarification
+// 🔧 Stronger system prompt
 const SYSTEM_PROMPT = {
   role: 'system',
-  content:
-    `You are an intelligent assistant. Provide direct, relevant, and informative responses without asking for clarification. 
-    If a single word is provided, give a complete explanation of that term based on known data. 
-    Do not ask the user for more details or clarification. Your answers should always be clear, direct, and useful.`
+  content: `You are a direct and intelligent assistant. Do not ask the user for clarification or follow-up.
+  If a single word or simple phrase is given, respond with an informative and complete explanation immediately.
+  Never reply with questions — just provide useful, authoritative information based on the query.`
 }
 
 export async function POST(req: Request) {
@@ -67,11 +65,10 @@ export async function POST(req: Request) {
 
     const supportsToolCalling = selectedModel.toolCallType === 'native'
 
-    // ✅ Prepend SYSTEM_PROMPT to enforce direct responses
+    // ✅ Force system prompt + user messages
     const messages = [SYSTEM_PROMPT, ...incomingMessages]
 
-    // ✅ Log the actual payload being sent for debugging
-    console.log('🔍 Sending messages to OpenAI:', JSON.stringify(messages, null, 2))
+    console.log('🧠 Final messages payload:', JSON.stringify(messages, null, 2))
 
     return supportsToolCalling
       ? createToolCallingStreamResponse({
@@ -87,7 +84,7 @@ export async function POST(req: Request) {
           searchMode
         })
   } catch (error) {
-    console.error('API route error:', error)
+    console.error('❌ API error:', error)
     return new Response('Error processing your request', {
       status: 500,
       statusText: 'Internal Server Error'
