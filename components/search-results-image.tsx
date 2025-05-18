@@ -69,7 +69,10 @@ if (typeof images[0] === 'string') {
     description: ''
   }))
 } else {
-  convertedImages = images as { url: string; description: string }[]
+  convertedImages = (images as any[]).map(image => ({
+    url: image.img_src || image.url || '',
+    description: image.title || image.description || ''
+  }))
 }
 
   return (
