@@ -12,8 +12,10 @@ export type SearchResults = {
 export type SearchResultImage =
   | string
   | {
-      url: string
-      description: string
+      url?: string
+      img_src?: string
+      description?: string
+      title?: string
       number_of_results?: number
     }
 
