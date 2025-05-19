@@ -248,7 +248,7 @@ async function searxngSearch(
 
     const data: SearXNGResponse = await response.json()
 
-    console.log('🔍 Raw SearXNG data:', JSON.stringify(data, null, 2))
+    console.log('Raw SearXNG data:', JSON.stringify(data, null, 2))
 
 
     // Separate general results and image results, and limit to maxResults
@@ -259,7 +259,7 @@ async function searxngSearch(
       .filter(result => result.img_src)
       .slice(0, maxResults)
 
-    console.log('🔍 Final SearXNG image data:', imageResults)
+    console.log('Final SearXNG image data:', imageResults)
 
     // Format the results to match the expected SearchResults structure
 // Format the image results
@@ -275,7 +275,7 @@ const processedImages = imageResults
   })
   .filter(image => !!image.url)
 
-console.log('🔍 Final SearXNG image data:', processedImages)
+console.log('Final SearXNG image data:', processedImages)
 
 return {
   results: generalResults.map(
