@@ -23,7 +23,9 @@ export const searchTool = tool({
     const filledQuery =
       query.length < 5 ? query + ' '.repeat(5 - query.length) : query
     let searchResult: SearchResults
-    const searchAPI = 'searxng'
+    const searchAPI =
+  (process.env.SEARCH_API as 'tavily' | 'exa' | 'searxng') ?? 'tavily'
+
 
     console.log(`Active Search API: ${searchAPI}`);
 
