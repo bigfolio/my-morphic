@@ -192,6 +192,9 @@ async function searxngSearch(
   includeDomains: string[] = [],
   excludeDomains: string[] = []
 ): Promise<SearchResults> {
+
+  console.log('🐾 searxngSearch triggered with query:', query)
+
   const apiUrl = process.env.SEARXNG_API_URL
   if (!apiUrl) throw new Error('SEARXNG_API_URL is missing')
 
