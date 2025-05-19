@@ -30,6 +30,9 @@ interface SearchResultsImageSectionProps {
 export const SearchResultsImageSection: React.FC<
   SearchResultsImageSectionProps
 > = ({ images, query }) => {
+
+  console.log('Image props received by component:', images)
+  
   const [api, setApi] = useState<CarouselApi>()
   const [current, setCurrent] = useState(0)
   const [count, setCount] = useState(0)
