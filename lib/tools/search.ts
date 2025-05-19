@@ -10,14 +10,7 @@ import { sanitizeUrl } from '@/lib/utils'
 import { tool } from 'ai'
 import Exa from 'exa-js'
 
-console.log('🧪 searchTool.execute called with:', {
-  query,
-  max_results,
-  search_depth,
-  searchAPI
-})
-
-
+// Declare all search tools and logic
 export const searchTool = tool({
   description: 'Search the web for information',
   parameters: searchSchema,
@@ -31,21 +24,21 @@ export const searchTool = tool({
     const filledQuery =
       query.length < 5 ? query + ' '.repeat(5 - query.length) : query
     let searchResult: SearchResults
+
     const searchAPI =
-  (process.env.SEARCH_API as 'tavily' | 'exa' | 'searxng') ?? 'tavily'
-
-
-    console.log(`Active Search API: ${searchAPI}`);
-
+      (process.env.SEARCH_API as string)?.toLowerCase() || 'tavily'
     const effectiveSearchDepth =
       searchAPI === 'searxng' &&
       process.env.SEARXNG_DEFAULT_DEPTH === 'advanced'
         ? 'advanced'
         : search_depth || 'basic'
 
-    console.log(
-      `Using search API: ${searchAPI}, Depth: ${effectiveSearchDepth}`
-    )
+    console.log('🔍 searchTool.execute called with:', {
+      query: filledQuery,
+      max_results,
+      search_depth,
+      searchAPI
+    })
 
     try {
       if (searchAPI === 'searxng' && effectiveSearchDepth === 'advanced') {
@@ -62,27 +55,41 @@ export const searchTool = tool({
             excludeDomains: exclude_domains
           })
         })
+
         if (!response.ok) {
           throw new Error(
             `Advanced search API error: ${response.status} ${response.statusText}`
           )
         }
+
         searchResult = await response.json()
-      } else {
-        searchResult = await (searchAPI === 'tavily'
-          ? tavilySearch
-          : searchAPI === 'exa'
-          ? exaSearch
-          : searxngSearch)(
+      } else if (searchAPI === 'tavily') {
+        searchResult = await tavilySearch(
           filledQuery,
           max_results,
-          effectiveSearchDepth === 'advanced' ? 'advanced' : 'basic',
+          effectiveSearchDepth,
+          include_domains,
+          exclude_domains
+        )
+      } else if (searchAPI === 'exa') {
+        searchResult = await exaSearch(
+          filledQuery,
+          max_results,
+          effectiveSearchDepth,
+          include_domains,
+          exclude_domains
+        )
+      } else {
+        searchResult = await searxngSearch(
+          filledQuery,
+          max_results,
+          effectiveSearchDepth,
           include_domains,
           exclude_domains
         )
       }
     } catch (error) {
-      console.error('Search API error:', error)
+      console.error('❌ Search API error:', error)
       searchResult = {
         results: [],
         query: filledQuery,
@@ -119,14 +126,14 @@ export async function search(
 
 async function tavilySearch(
   query: string,
-  maxResults: number = 10,
-  searchDepth: 'basic' | 'advanced' = 'basic',
-  includeDomains: string[] = [],
-  excludeDomains: string[] = []
+  maxResults: number,
+  searchDepth: string,
+  includeDomains: string[],
+  excludeDomains: string[]
 ): Promise<SearchResults> {
   const apiKey = process.env.TAVILY_API_KEY
   if (!apiKey) throw new Error('TAVILY_API_KEY is missing')
-  const includeImageDescriptions = true
+
   const response = await fetch('https://api.tavily.com/search', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -136,40 +143,46 @@ async function tavilySearch(
       max_results: Math.max(maxResults, 5),
       search_depth: searchDepth,
       include_images: true,
-      include_image_descriptions: includeImageDescriptions,
+      include_image_descriptions: true,
       include_answers: true,
       include_domains: includeDomains,
       exclude_domains: excludeDomains
     })
   })
-  if (!response.ok)
+
+  if (!response.ok) {
     throw new Error(
       `Tavily API error: ${response.status} ${response.statusText}`
     )
+  }
 
   const data = await response.json()
-  console.log('Raw SearXNG response:', JSON.stringify(data, null, 2))
 
-  const processedImages = includeImageDescriptions
-    ? data.images
-        .map(({ url, description }: { url: string; description: string }) => ({
-          url: sanitizeUrl(url),
-          description
-        }))
-        .filter((image: SearchResultImage): image is { url: string; description: string } =>
-  typeof image === 'object' && typeof image.description === 'string' && image.description.trim().length > 0
-)
-    : data.images.map((url: string) => sanitizeUrl(url))
+  const processedImages = data.images
+    .map(({ url, description }: { url: string; description: string }) => ({
+      url: sanitizeUrl(url),
+      description
+    }))
+    .filter(
+      (
+        image: SearchResultImage
+      ): image is { url: string; description: string } =>
+        typeof image === 'object' &&
+        typeof image.description === 'string' &&
+        image.description.trim().length > 0
+    )
+
+  console.log('📷 Tavily processed images:', processedImages)
 
   return { ...data, images: processedImages }
 }
 
 async function exaSearch(
   query: string,
-  maxResults: number = 10,
+  maxResults: number,
   _searchDepth: string,
-  includeDomains: string[] = [],
-  excludeDomains: string[] = []
+  includeDomains: string[],
+  excludeDomains: string[]
 ): Promise<SearchResults> {
   const apiKey = process.env.EXA_API_KEY
   if (!apiKey) throw new Error('EXA_API_KEY is missing')
@@ -196,81 +209,74 @@ async function exaSearch(
 
 async function searxngSearch(
   query: string,
-  maxResults: number = 10,
+  maxResults: number,
   searchDepth: string,
-  includeDomains: string[] = [],
-  excludeDomains: string[] = []
+  includeDomains: string[],
+  excludeDomains: string[]
 ): Promise<SearchResults> {
-
-  console.log('🐾 searxngSearch triggered with query:', query)
-
   const apiUrl = process.env.SEARXNG_API_URL
   if (!apiUrl) throw new Error('SEARXNG_API_URL is missing')
 
-  try {
-    const url = new URL(`${apiUrl}/search`)
-    url.searchParams.append('q', query)
-    url.searchParams.append('format', 'json')
-    url.searchParams.append('categories', 'general,images')
+  const url = new URL(`${apiUrl}/search`)
+  url.searchParams.append('q', query)
+  url.searchParams.append('format', 'json')
+  url.searchParams.append('categories', 'general,images')
 
-    if (searchDepth === 'advanced') {
-      url.searchParams.append('time_range', '')
-      url.searchParams.append('safesearch', '0')
-      url.searchParams.append('engines', 'google,bing,duckduckgo,wikipedia')
-    } else {
-      url.searchParams.append('time_range', 'year')
-      url.searchParams.append('safesearch', '1')
-      url.searchParams.append('engines', 'google,bing')
-    }
+  if (searchDepth === 'advanced') {
+    url.searchParams.append('time_range', '')
+    url.searchParams.append('safesearch', '0')
+    url.searchParams.append('engines', 'google,bing,duckduckgo,wikipedia')
+  } else {
+    url.searchParams.append('time_range', 'year')
+    url.searchParams.append('safesearch', '1')
+    url.searchParams.append('engines', 'google,bing')
+  }
 
-    const response = await fetch(url.toString(), {
-      method: 'GET',
-      headers: { Accept: 'application/json' }
+  const response = await fetch(url.toString(), {
+    method: 'GET',
+    headers: { Accept: 'application/json' }
+  })
+
+  if (!response.ok) {
+    const errorText = await response.text()
+    throw new Error(
+      `SearXNG API error: ${response.status} ${response.statusText} - ${errorText}`
+    )
+  }
+
+  const data: SearXNGResponse = await response.json()
+
+  const generalResults = data.results
+    .filter(result => !result.img_src)
+    .slice(0, maxResults)
+
+  const imageResults = data.results
+    .filter(result => result.img_src)
+    .slice(0, maxResults)
+
+  const processedImages = imageResults
+    .map(result => {
+      const imgSrc = result.img_src || ''
+      const fullUrl = imgSrc.startsWith('http') ? imgSrc : `${apiUrl}${imgSrc}`
+      return {
+        url: fullUrl,
+        description: result.title || ''
+      }
     })
+    .filter(image => !!image.url)
 
-    if (!response.ok) {
-      const errorText = await response.text()
-      throw new Error(
-        `SearXNG API error: ${response.status} ${response.statusText} - ${errorText}`
-      )
-    }
+  console.log('🖼️ Processed SearXNG images:', processedImages)
 
-    const data: SearXNGResponse = await response.json()
-
-    const generalResults = data.results
-      .filter(result => !result.img_src)
-      .slice(0, maxResults)
-    const imageResults = data.results
-      .filter(result => result.img_src)
-      .slice(0, maxResults)
-
-    const processedImages = imageResults
-      .map(result => {
-        const imgSrc = result.img_src || ''
-        const fullUrl = imgSrc.startsWith('http') ? imgSrc : `${apiUrl}${imgSrc}`
-        return {
-          url: fullUrl,
-          description: result.title || ''
-        }
+  return {
+    results: generalResults.map(
+      (result: SearXNGResult): SearchResultItem => ({
+        title: result.title,
+        url: result.url,
+        content: result.content
       })
-      .filter(image => !!image.url)
-
-    console.log('🖼️ Processed SearXNG images:', processedImages)
-
-    return {
-      results: generalResults.map(
-        (result: SearXNGResult): SearchResultItem => ({
-          title: result.title,
-          url: result.url,
-          content: result.content
-        })
-      ),
-      query: data.query,
-      images: processedImages,
-      number_of_results: data.number_of_results
-    }
-  } catch (error) {
-    console.error('SearXNG API error:', error)
-    throw error
+    ),
+    query: data.query,
+    images: processedImages,
+    number_of_results: data.number_of_results
   }
 }
