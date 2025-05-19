@@ -33,7 +33,7 @@ export const searchTool = tool({
         : search_depth || 'basic'
 
     console.log(
-      `🔎 Using search API: ${searchAPI}, Depth: ${effectiveSearchDepth}`
+      `Using search API: ${searchAPI}, Depth: ${effectiveSearchDepth}`
     )
 
     try {
@@ -137,6 +137,8 @@ async function tavilySearch(
     )
 
   const data = await response.json()
+  console.log('Raw SearXNG response:', JSON.stringify(data, null, 2))
+
   const processedImages = includeImageDescriptions
     ? data.images
         .map(({ url, description }: { url: string; description: string }) => ({
