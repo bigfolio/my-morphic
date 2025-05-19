@@ -144,8 +144,8 @@ async function tavilySearch(
           description
         }))
         .filter((image: SearchResultImage): image is { url: string; description: string } =>
-          typeof image === 'object' && image.description
-        )
+  typeof image === 'object' && typeof image.description === 'string' && image.description.trim().length > 0
+)
     : data.images.map((url: string) => sanitizeUrl(url))
 
   return { ...data, images: processedImages }
