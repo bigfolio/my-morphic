@@ -26,6 +26,8 @@ export const searchTool = tool({
     const searchAPI =
       (process.env.SEARCH_API as 'tavily' | 'exa' | 'searxng') || 'tavily'
 
+    console.log(`Active Search API: ${searchAPI}`);
+
     const effectiveSearchDepth =
       searchAPI === 'searxng' &&
       process.env.SEARXNG_DEFAULT_DEPTH === 'advanced'
