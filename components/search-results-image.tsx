@@ -30,9 +30,9 @@ interface SearchResultsImageSectionProps {
 export const SearchResultsImageSection: React.FC<
   SearchResultsImageSectionProps
 > = ({ images, query }) => {
-  console.log('Image props received by component:', images)
+  console.log('🖼️ Image props received by component:', images)
 
-   if (!images || images.length === 0) {
+  if (!images || images.length === 0) {
     return <div className="text-muted-foreground">No images found</div>
   }
   
