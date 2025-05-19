@@ -257,23 +257,34 @@ async function searxngSearch(
       .slice(0, maxResults)
 
     // Format the results to match the expected SearchResults structure
+// Format the image results
+const processedImages = imageResults
+  .map(result => {
+    const imgSrc = result.img_src || ''
+    const title = result.title || ''
+    const fullUrl = imgSrc.startsWith('http') ? imgSrc : `${apiUrl}${imgSrc}`
     return {
-      results: generalResults.map(
-        (result: SearXNGResult): SearchResultItem => ({
-          title: result.title,
-          url: result.url,
-          content: result.content
-        })
-      ),
-      query: data.query,
-      images: imageResults
-        .map(result => {
-          const imgSrc = result.img_src || ''
-          return imgSrc.startsWith('http') ? imgSrc : `${apiUrl}${imgSrc}`
-        })
-        .filter(Boolean),
-      number_of_results: data.number_of_results
+      url: fullUrl,
+      description: title
     }
+  })
+  .filter(image => !!image.url)
+
+console.log('🔍 Final SearXNG image data:', processedImages)
+
+return {
+  results: generalResults.map(
+    (result: SearXNGResult): SearchResultItem => ({
+      title: result.title,
+      url: result.url,
+      content: result.content
+    })
+  ),
+  query: data.query,
+  images: processedImages,
+  number_of_results: data.number_of_results
+}
+    
   } catch (error) {
     console.error('SearXNG API error:', error)
     throw error
