@@ -20,7 +20,6 @@ export const searchTool = tool({
     include_domains = [],
     exclude_domains = []
   }) => {
-    // Tavily API requires a minimum of 5 characters in the query
     const filledQuery =
       query.length < 5 ? query + ' '.repeat(5 - query.length) : query
     let searchResult: SearchResults
@@ -34,12 +33,11 @@ export const searchTool = tool({
         : search_depth || 'basic'
 
     console.log(
-      `Using search API: ${searchAPI}, Search Depth: ${effectiveSearchDepth}`
+      `🔎 Using search API: ${searchAPI}, Depth: ${effectiveSearchDepth}`
     )
 
     try {
       if (searchAPI === 'searxng' && effectiveSearchDepth === 'advanced') {
-        // API route for advanced SearXNG search
         const baseUrl =
           process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
         const response = await fetch(`${baseUrl}/api/advanced-search`, {
@@ -82,7 +80,6 @@ export const searchTool = tool({
       }
     }
 
-    console.log('completed search')
     return searchResult
   }
 })
@@ -117,15 +114,11 @@ async function tavilySearch(
   excludeDomains: string[] = []
 ): Promise<SearchResults> {
   const apiKey = process.env.TAVILY_API_KEY
-  if (!apiKey) {
-    throw new Error('TAVILY_API_KEY is not set in the environment variables')
-  }
+  if (!apiKey) throw new Error('TAVILY_API_KEY is missing')
   const includeImageDescriptions = true
   const response = await fetch('https://api.tavily.com/search', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       api_key: apiKey,
       query,
@@ -138,12 +131,10 @@ async function tavilySearch(
       exclude_domains: excludeDomains
     })
   })
-
-  if (!response.ok) {
+  if (!response.ok)
     throw new Error(
       `Tavily API error: ${response.status} ${response.statusText}`
     )
-  }
 
   const data = await response.json()
   const processedImages = includeImageDescriptions
@@ -152,20 +143,12 @@ async function tavilySearch(
           url: sanitizeUrl(url),
           description
         }))
-        .filter(
-          (
-            image: SearchResultImage
-          ): image is { url: string; description: string } =>
-            typeof image === 'object' &&
-            image.description !== undefined &&
-            image.description !== ''
+        .filter((image: SearchResultImage): image is { url: string; description: string } =>
+          typeof image === 'object' && image.description
         )
     : data.images.map((url: string) => sanitizeUrl(url))
 
-  return {
-    ...data,
-    images: processedImages
-  }
+  return { ...data, images: processedImages }
 }
 
 async function exaSearch(
@@ -176,9 +159,7 @@ async function exaSearch(
   excludeDomains: string[] = []
 ): Promise<SearchResults> {
   const apiKey = process.env.EXA_API_KEY
-  if (!apiKey) {
-    throw new Error('EXA_API_KEY is not set in the environment variables')
-  }
+  if (!apiKey) throw new Error('EXA_API_KEY is missing')
 
   const exa = new Exa(apiKey)
   const exaResults = await exa.searchAndContents(query, {
@@ -189,10 +170,10 @@ async function exaSearch(
   })
 
   return {
-    results: exaResults.results.map((result: any) => ({
-      title: result.title,
-      url: result.url,
-      content: result.highlight || result.text
+    results: exaResults.results.map((r: any) => ({
+      title: r.title,
+      url: r.url,
+      content: r.highlight || r.text
     })),
     query,
     images: [],
@@ -208,18 +189,14 @@ async function searxngSearch(
   excludeDomains: string[] = []
 ): Promise<SearchResults> {
   const apiUrl = process.env.SEARXNG_API_URL
-  if (!apiUrl) {
-    throw new Error('SEARXNG_API_URL is not set in the environment variables')
-  }
+  if (!apiUrl) throw new Error('SEARXNG_API_URL is missing')
 
   try {
-    // Construct the URL with query parameters
     const url = new URL(`${apiUrl}/search`)
     url.searchParams.append('q', query)
     url.searchParams.append('format', 'json')
     url.searchParams.append('categories', 'general,images')
 
-    // Apply search depth settings
     if (searchDepth === 'advanced') {
       url.searchParams.append('time_range', '')
       url.searchParams.append('safesearch', '0')
@@ -230,17 +207,13 @@ async function searxngSearch(
       url.searchParams.append('engines', 'google,bing')
     }
 
-    // Fetch results from SearXNG
     const response = await fetch(url.toString(), {
       method: 'GET',
-      headers: {
-        Accept: 'application/json'
-      }
+      headers: { Accept: 'application/json' }
     })
 
     if (!response.ok) {
       const errorText = await response.text()
-      console.error(`SearXNG API error (${response.status}):`, errorText)
       throw new Error(
         `SearXNG API error: ${response.status} ${response.statusText} - ${errorText}`
       )
@@ -248,10 +221,6 @@ async function searxngSearch(
 
     const data: SearXNGResponse = await response.json()
 
-    console.log('Raw SearXNG data:', JSON.stringify(data, null, 2))
-
-
-    // Separate general results and image results, and limit to maxResults
     const generalResults = data.results
       .filter(result => !result.img_src)
       .slice(0, maxResults)
@@ -259,37 +228,31 @@ async function searxngSearch(
       .filter(result => result.img_src)
       .slice(0, maxResults)
 
-    console.log('Final SearXNG image data:', imageResults)
+    const processedImages = imageResults
+      .map(result => {
+        const imgSrc = result.img_src || ''
+        const fullUrl = imgSrc.startsWith('http') ? imgSrc : `${apiUrl}${imgSrc}`
+        return {
+          url: fullUrl,
+          description: result.title || ''
+        }
+      })
+      .filter(image => !!image.url)
 
-    // Format the results to match the expected SearchResults structure
-// Format the image results
-const processedImages = imageResults
-  .map(result => {
-    const imgSrc = result.img_src || ''
-    const title = result.title || ''
-    const fullUrl = imgSrc.startsWith('http') ? imgSrc : `${apiUrl}${imgSrc}`
+    console.log('🖼️ Processed SearXNG images:', processedImages)
+
     return {
-      url: fullUrl,
-      description: title
+      results: generalResults.map(
+        (result: SearXNGResult): SearchResultItem => ({
+          title: result.title,
+          url: result.url,
+          content: result.content
+        })
+      ),
+      query: data.query,
+      images: processedImages,
+      number_of_results: data.number_of_results
     }
-  })
-  .filter(image => !!image.url)
-
-console.log('Final SearXNG image data:', processedImages)
-
-return {
-  results: generalResults.map(
-    (result: SearXNGResult): SearchResultItem => ({
-      title: result.title,
-      url: result.url,
-      content: result.content
-    })
-  ),
-  query: data.query,
-  images: processedImages,
-  number_of_results: data.number_of_results
-}
-    
   } catch (error) {
     console.error('SearXNG API error:', error)
     throw error
