@@ -10,6 +10,14 @@ import { sanitizeUrl } from '@/lib/utils'
 import { tool } from 'ai'
 import Exa from 'exa-js'
 
+console.log('🧪 searchTool.execute called with:', {
+  query,
+  max_results,
+  search_depth,
+  searchAPI
+})
+
+
 export const searchTool = tool({
   description: 'Search the web for information',
   parameters: searchSchema,
