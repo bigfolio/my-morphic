@@ -30,13 +30,8 @@ interface SearchResultsImageSectionProps {
 export const SearchResultsImageSection: React.FC<
   SearchResultsImageSectionProps
 > = ({ images, query }) => {
-  console.log('🖼️ Image props received by component:', images)
 
-  if (!images || images.length === 0) {
-    return <div className="text-muted-foreground">No images found</div>
-  }
-  
-  const [api, setApi] = useState<CarouselApi>()
+ const [api, setApi] = useState<CarouselApi>()
   const [current, setCurrent] = useState(0)
   const [count, setCount] = useState(0)
   const [selectedIndex, setSelectedIndex] = useState(0)
@@ -61,10 +56,14 @@ export const SearchResultsImageSection: React.FC<
       api.scrollTo(selectedIndex, true)
     }
   }, [api, selectedIndex])
+  
+  console.log('Image props received by component:', images)
 
   if (!images || images.length === 0) {
     return <div className="text-muted-foreground">No images found</div>
   }
+  
+
 
   // If enabled the include_images_description is true, the images will be an array of { url: string, description: string }
   // Otherwise, the images will be an array of strings
