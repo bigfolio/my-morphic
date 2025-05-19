@@ -259,6 +259,8 @@ async function searxngSearch(
       .filter(result => result.img_src)
       .slice(0, maxResults)
 
+    console.log('🔍 Final SearXNG image data:', imageResults)
+
     // Format the results to match the expected SearchResults structure
 // Format the image results
 const processedImages = imageResults
