@@ -1,3 +1,5 @@
+console.log('🔍 search.ts module loaded');
+
 import { searchSchema } from '@/lib/schema/search'
 import {
   SearchResultImage,
