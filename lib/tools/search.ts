@@ -248,6 +248,9 @@ async function searxngSearch(
 
     const data: SearXNGResponse = await response.json()
 
+    console.log('🔍 Raw SearXNG data:', JSON.stringify(data, null, 2))
+
+
     // Separate general results and image results, and limit to maxResults
     const generalResults = data.results
       .filter(result => !result.img_src)
