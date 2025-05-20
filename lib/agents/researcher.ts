@@ -38,6 +38,14 @@ export function researcher({
   try {
     const currentDate = new Date().toLocaleString()
 
+  console.log('🧠 researcher() config:', {
+  model: getModel(model),
+  system: `${SYSTEM_PROMPT}\nCurrent date and time: ${currentDate}`,
+  messages,
+  tools: ['search', 'retrieve', 'videoSearch', 'ask_question'],
+  searchMode
+})
+
     return {
       model: getModel(model),
       system: SYSTEM_PROMPT.replace('{{currentDate}}', currentDate),
