@@ -56,9 +56,10 @@ export function researcher({
         videoSearch: videoSearchTool,
         ask_question: askQuestionTool
       },
-      experimental_activeTools: searchMode
-        ? ['search', 'retrieve', 'videoSearch', 'ask_question']
-        : [],
+     // experimental_activeTools: searchMode
+     //   ? ['search', 'retrieve', 'videoSearch', 'ask_question']
+     //    : [],
+      experimental_activeTools: ['search'], // 🔥 Force search tool only
       maxSteps: searchMode ? 5 : 1,
       experimental_transform: smoothStream()
     }
