@@ -23,6 +23,9 @@ export const searchTool = tool({
     include_domains = [],
     exclude_domains = []
   }) => {
+    // ✅ Place your console.log HERE
+    console.log('🔍 searchTool.execute HIT with query:', query)
+    
     const filledQuery =
       query.length < 5 ? query + ' '.repeat(5 - query.length) : query
     let searchResult: SearchResults
