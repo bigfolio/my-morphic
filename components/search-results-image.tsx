@@ -30,66 +30,33 @@ interface SearchResultsImageSectionProps {
 export const SearchResultsImageSection: React.FC<
   SearchResultsImageSectionProps
 > = ({ images, query }) => {
-
- const [api, setApi] = useState<CarouselApi>()
+  const [api, setApi] = useState<CarouselApi>()
   const [current, setCurrent] = useState(0)
   const [count, setCount] = useState(0)
   const [selectedIndex, setSelectedIndex] = useState(0)
 
-  // Update the current and count state when the carousel api is available
-  useEffect(() => {
-    if (!api) {
-      return
-    }
+  // Log the images prop for debugging
+  console.log('🖼️ SearchResultsImageSection rendering with images:', images)
 
+  // TEMP: Override with test images to confirm rendering
+  const convertedImages: { url: string; description: string }[] = [
+    { url: 'https://placekitten.com/300/200', description: 'Test Cat 1' },
+    { url: 'https://placekitten.com/301/200', description: 'Test Cat 2' }
+  ]
+
+  // Carousel logic
+  useEffect(() => {
+    if (!api) return
     setCount(api.scrollSnapList().length)
     setCurrent(api.selectedScrollSnap() + 1)
-
     api.on('select', () => {
       setCurrent(api.selectedScrollSnap() + 1)
     })
   }, [api])
 
-  // Scroll to the selected index
   useEffect(() => {
-    if (api) {
-      api.scrollTo(selectedIndex, true)
-    }
+    if (api) api.scrollTo(selectedIndex, true)
   }, [api, selectedIndex])
-  
-  console.log('Image props received by component:', images)
-
-//  if (!images || images.length === 0) {
-//    return <div className="text-muted-foreground">No images found</div>
-//  }
-  
-
-
-  // If enabled the include_images_description is true, the images will be an array of { url: string, description: string }
-  // Otherwise, the images will be an array of strings
-  let convertedImages: { url: string; description: string }[] = []
-
-  console.log('🔎 HARD TEST IMAGES:', [
-  { url: 'https://placekitten.com/300/200', description: 'Test Cat 1' },
-  { url: 'https://placekitten.com/301/200', description: 'Test Cat 2' }
-]);
-
-convertedImages = [
-  { url: 'https://placekitten.com/300/200', description: 'Test Cat 1' },
-  { url: 'https://placekitten.com/301/200', description: 'Test Cat 2' }
-];
-  
-//if (typeof images[0] === 'string') {
-//  convertedImages = (images as string[]).map(image => ({
-//    url: image,
-//    description: ''
-//  }))
-//} else {
-//  convertedImages = (images as any[]).map(image => ({
-//    url: image.img_src || image.url || '',
-//    description: image.title || image.description || ''
-//  }))
-//}
 
   return (
     <div className="flex flex-wrap gap-2">
@@ -102,18 +69,14 @@ convertedImages = [
             >
               <Card className="flex-1 h-full">
                 <CardContent className="p-2 h-full w-full">
-                  {image ? (
-                    <img
-                      src={image.url}
-                      alt={`Image ${index + 1}`}
-                      className="h-full w-full object-cover"
-                      onError={e =>
-                        (e.currentTarget.src = '/images/placeholder-image.png')
-                      }
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-muted animate-pulse" />
-                  )}
+                  <img
+                    src={image.url}
+                    alt={`Image ${index + 1}`}
+                    className="h-full w-full object-cover"
+                    onError={e =>
+                      (e.currentTarget.src = '/images/placeholder-image.png')
+                    }
+                  />
                 </CardContent>
               </Card>
               {index === 3 && images.length > 4 && (
