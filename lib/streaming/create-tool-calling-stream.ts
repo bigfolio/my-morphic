@@ -49,19 +49,25 @@ export function createToolCallingStreamResponse(config: BaseStreamConfig) {
         console.log('🔧 researcherConfig:', JSON.stringify(researcherConfig, null, 2))
 
         // 🧪 DEBUG: Manually test searchTool
-        try {
-          console.log('🧪 Forcing searchTool to run manually with query "cats"')
-          const debugResult = await searchTool.execute({
-            query: 'cats',
-            max_results: 5,
-            search_depth: 'basic',
-            include_domains: [],
-            exclude_domains: []
-          })
-          console.log('🧪 Manual search result:', JSON.stringify(debugResult, null, 2))
-        } catch (manualError) {
-          console.error('❌ Manual searchTool.execute() failed:', manualError)
-        }
+try {
+  console.log('🧪 Forcing searchTool to run manually with query "cats"')
+  const debugResult = await searchTool.execute(
+    {
+      query: 'cats',
+      max_results: 5,
+      search_depth: 'basic',
+      include_domains: [],
+      exclude_domains: []
+    },
+    {
+      toolCallId: 'debug-test',
+      messages: []
+    }
+  )
+  console.log('🧪 Manual search result:', JSON.stringify(debugResult, null, 2))
+} catch (manualError) {
+  console.error('❌ Manual searchTool.execute() failed:', manualError)
+}
 
         const result = streamText({
           ...researcherConfig,
