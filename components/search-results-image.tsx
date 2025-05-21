@@ -58,6 +58,8 @@ if (typeof images[0] === 'string') {
   }))
 }
 
+  console.log('🖼️ Converted images in component:', convertedImages)
+
   // Carousel logic
   useEffect(() => {
     if (!api) return
