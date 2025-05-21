@@ -62,8 +62,14 @@ export const SearchResultsImageSection: React.FC<
 //  if (!images || images.length === 0) {
 //    return <div className="text-muted-foreground">No images found</div>
 //  }
+  
 
-console.log('🔎 HARD TEST IMAGES:', [
+
+  // If enabled the include_images_description is true, the images will be an array of { url: string, description: string }
+  // Otherwise, the images will be an array of strings
+  let convertedImages: { url: string; description: string }[] = []
+
+  console.log('🔎 HARD TEST IMAGES:', [
   { url: 'https://placekitten.com/300/200', description: 'Test Cat 1' },
   { url: 'https://placekitten.com/301/200', description: 'Test Cat 2' }
 ]);
@@ -73,22 +79,17 @@ convertedImages = [
   { url: 'https://placekitten.com/301/200', description: 'Test Cat 2' }
 ];
   
-
-
-  // If enabled the include_images_description is true, the images will be an array of { url: string, description: string }
-  // Otherwise, the images will be an array of strings
-  let convertedImages: { url: string; description: string }[] = []
-if (typeof images[0] === 'string') {
-  convertedImages = (images as string[]).map(image => ({
-    url: image,
-    description: ''
-  }))
-} else {
-  convertedImages = (images as any[]).map(image => ({
-    url: image.img_src || image.url || '',
-    description: image.title || image.description || ''
-  }))
-}
+//if (typeof images[0] === 'string') {
+//  convertedImages = (images as string[]).map(image => ({
+//    url: image,
+//    description: ''
+//  }))
+//} else {
+//  convertedImages = (images as any[]).map(image => ({
+//    url: image.img_src || image.url || '',
+//    description: image.title || image.description || ''
+//  }))
+//}
 
   return (
     <div className="flex flex-wrap gap-2">
