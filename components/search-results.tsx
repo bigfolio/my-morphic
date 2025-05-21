@@ -15,6 +15,8 @@ export interface SearchResultsProps {
 }
 
 export function SearchResults({ results, images = [], query }: SearchResultsProps) {
+  console.log('📦 Images prop in search-results.tsx:', images)
+  
   const [showAllResults, setShowAllResults] = useState(false)
 
   const handleViewMore = () => {
