@@ -39,10 +39,24 @@ export const SearchResultsImageSection: React.FC<
   console.log('🖼️ SearchResultsImageSection rendering with images:', images)
 
   // TEMP: Override with test images to confirm rendering
-  const convertedImages: { url: string; description: string }[] = [
-    { url: 'https://placekitten.com/300/200', description: 'Test Cat 1' },
-    { url: 'https://placekitten.com/301/200', description: 'Test Cat 2' }
-  ]
+//  const convertedImages: { url: string; description: string }[] = [
+//    { url: 'https://placekitten.com/300/200', description: 'Test Cat 1' },
+//    { url: 'https://placekitten.com/301/200', description: 'Test Cat 2' }
+//  ]
+
+  let convertedImages: { url: string; description: string }[] = []
+
+if (typeof images[0] === 'string') {
+  convertedImages = (images as string[]).map(image => ({
+    url: image,
+    description: ''
+  }))
+} else {
+  convertedImages = (images as any[]).map(image => ({
+    url: image.img_src || image.url || '',
+    description: image.title || image.description || ''
+  }))
+}
 
   // Carousel logic
   useEffect(() => {
