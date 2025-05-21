@@ -11,6 +11,9 @@ import { isReasoningModel } from '../utils/registry'
 import { handleStreamFinish } from './handle-stream-finish'
 import { BaseStreamConfig } from './types'
 
+// ✅ Import search tool for debug testing
+import { searchTool } from '@/lib/tools/search'
+
 // Function to check if a message contains ask_question tool invocation
 function containsAskQuestionTool(message: CoreMessage) {
   // For CoreMessage format, we check the content array
@@ -45,10 +48,24 @@ export function createToolCallingStreamResponse(config: BaseStreamConfig) {
 
         console.log('🔧 researcherConfig:', JSON.stringify(researcherConfig, null, 2))
 
+        // 🧪 DEBUG: Manually test searchTool
+        try {
+          console.log('🧪 Forcing searchTool to run manually with query "cats"')
+          const debugResult = await searchTool.execute({
+            query: 'cats',
+            max_results: 5,
+            search_depth: 'basic',
+            include_domains: [],
+            exclude_domains: []
+          })
+          console.log('🧪 Manual search result:', JSON.stringify(debugResult, null, 2))
+        } catch (manualError) {
+          console.error('❌ Manual searchTool.execute() failed:', manualError)
+        }
+
         const result = streamText({
           ...researcherConfig,
           onFinish: async result => {
-            // Check if the last message contains an ask_question tool invocation
             const shouldSkipRelatedQuestions =
               isReasoningModel(modelId) ||
               (result.response.messages.length > 0 &&
@@ -76,7 +93,6 @@ export function createToolCallingStreamResponse(config: BaseStreamConfig) {
       }
     },
     onError: error => {
-      // console.error('Stream error:', error)
       return error instanceof Error ? error.message : String(error)
     }
   })
