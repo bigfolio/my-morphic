@@ -27,6 +27,9 @@ export function SearchSection({
   const isToolLoading = tool.state === 'call'
   const searchResults: TypeSearchResults =
     tool.state === 'result' ? tool.result : undefined
+
+  console.log('🐞 SearchSection received searchResults:', searchResults);
+  
   const query = tool.args?.query as string | undefined
   const includeDomains = tool.args?.includeDomains as string[] | undefined
   const includeDomainsString = includeDomains
