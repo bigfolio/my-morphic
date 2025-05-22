@@ -22,32 +22,35 @@ export function Chat({
   models?: Model[]
 }) {
   const {
-    messages,
-    input,
-    handleInputChange,
-    handleSubmit,
-    status,
-    setMessages,
-    stop,
-    append,
-    data,
-    setData,
-    addToolResult
-  } = useChat({
-    initialMessages: savedMessages,
-    id: CHAT_ID,
-    body: {
-      id
-    },
-    onFinish: () => {
-      window.history.replaceState({}, '', `/search/${id}`)
-    },
-    onError: error => {
-      toast.error(`Error in chat: ${error.message}`)
-    },
-    sendExtraMessageFields: false,
-    experimental_throttle: 100
-  })
+  messages,
+  input,
+  handleInputChange,
+  handleSubmit,
+  status,
+  setMessages,
+  stop,
+  append,
+  data,
+  setData,
+  addToolResult
+} = useChat({
+  initialMessages: savedMessages,
+  id: CHAT_ID,
+  body: {
+    id
+  },
+  onFinish: () => {
+    window.history.replaceState({}, '', `/search/${id}`)
+  },
+  onError: error => {
+    toast.error(`Error in chat: ${error.message}`)
+  },
+  sendExtraMessageFields: false,
+  experimental_throttle: 100
+})
+
+// ✅ Log the data AFTER the hook runs
+console.log('🧪 useChat().data:', data)
 
   const isLoading = status === 'submitted' || status === 'streaming'
 
@@ -64,7 +67,7 @@ export function Chat({
 
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    setData(undefined) // reset data to clear tool call
+   // setData(undefined) // reset data to clear tool call
     handleSubmit(e)
   }
 
