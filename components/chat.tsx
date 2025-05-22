@@ -8,6 +8,7 @@ import { useEffect } from 'react'
 import { toast } from 'sonner'
 import { ChatMessages } from './chat-messages'
 import { ChatPanel } from './chat-panel'
+import { SearchSection } from './search-section' // ✅ Make sure this path is correct
 
 export function Chat({
   id,
@@ -44,7 +45,7 @@ export function Chat({
     onError: error => {
       toast.error(`Error in chat: ${error.message}`)
     },
-    sendExtraMessageFields: false, // Disable extra message fields,
+    sendExtraMessageFields: false,
     experimental_throttle: 100
   })
 
@@ -67,6 +68,9 @@ export function Chat({
     handleSubmit(e)
   }
 
+  // ✅ DEBUG LOG
+  console.log('🧪 tool data:', data)
+
   return (
     <div className="flex flex-col w-full max-w-3xl pt-14 pb-32 mx-auto stretch">
       <ChatMessages
@@ -77,6 +81,12 @@ export function Chat({
         chatId={id}
         addToolResult={addToolResult}
       />
+
+      {/* ✅ Conditionally show search section if tool result is available */}
+      {data?.tool === 'search' && data?.state === 'result' && (
+        <SearchSection tool={data} isOpen={true} onOpenChange={() => {}} />
+      )}
+
       <ChatPanel
         input={input}
         handleInputChange={handleInputChange}
