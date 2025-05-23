@@ -7,3 +7,13 @@ export interface BaseStreamConfig {
   chatId: string
   searchMode: boolean
 }
+
+export interface HandleStreamFinishParams {
+  responseMessages: Message[]
+  originalMessages: Message[]
+  model: string
+  chatId: string
+  dataStream: any
+  skipRelatedQuestions: boolean
+  addToolResult?: (result: any) => void
+}
