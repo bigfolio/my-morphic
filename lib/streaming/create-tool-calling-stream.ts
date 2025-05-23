@@ -8,7 +8,7 @@ import {
 } from 'ai'
 import { getMaxAllowedTokens, truncateMessages } from '../utils/context-window'
 import { isReasoningModel } from '../utils/registry'
-import { handleStreamFinish } from './handle-stream-finish'
+//import { handleStreamFinish } from './handle-stream-finish'
 import { BaseStreamConfig } from './types'
 
 // ✅ Import search tool for debug testing
