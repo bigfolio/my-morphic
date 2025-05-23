@@ -10,6 +10,7 @@ import { getMaxAllowedTokens, truncateMessages } from '../utils/context-window'
 import { isReasoningModel } from '../utils/registry'
 import { handleStreamFinish } from './handle-stream-finish'
 import { BaseStreamConfig } from './types'
+import { HandleStreamFinishParams } from './types'
 
 // ✅ Import search tool for debug testing
 import { searchTool } from '@/lib/tools/search'
@@ -27,7 +28,7 @@ function containsAskQuestionTool(message: CoreMessage) {
   )
 }
 
-export function createToolCallingStreamResponse(config: BaseStreamConfig) {
+export function createToolCallingStreamResponse(config: BaseStreamConfig & { addToolResult?: (result: any) => void }) {
   return createDataStreamResponse({
     execute: async (dataStream: DataStreamWriter) => {
       const { messages, model, chatId, searchMode } = config
