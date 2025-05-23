@@ -3,7 +3,7 @@ import { generateRelatedQuestions } from '@/lib/agents/generate-related-question
 import { ExtendedCoreMessage } from '@/lib/types'
 import { convertToExtendedCoreMessages } from '@/lib/utils'
 import { CoreMessage, DataStreamWriter, JSONValue, Message } from 'ai'
-import type { HandleStreamFinishParams } from './types'
+import { HandleStreamFinishParams } from './types'
 
 interface HandleStreamFinishParams {
   responseMessages: CoreMessage[]
