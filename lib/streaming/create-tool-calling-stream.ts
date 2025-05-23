@@ -89,7 +89,7 @@ try {
               chatId,
               dataStream,
               skipRelatedQuestions: shouldSkipRelatedQuestions,
-              addToolResult: config.addToolResult // <-- this line is critical
+              ...(config.addToolResult && { addToolResult: config.addToolResult }) // ✅ Optional key merge
             })
           }
         })
