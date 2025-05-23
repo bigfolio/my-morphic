@@ -15,5 +15,6 @@ export interface HandleStreamFinishParams {
   chatId: string
   dataStream: any
   skipRelatedQuestions: boolean
-  addToolResult?: (result: any) => void
+  addToolResult?: (result: any) => void // ✅ this line is essential
 }
+
