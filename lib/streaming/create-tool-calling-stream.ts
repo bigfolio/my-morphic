@@ -87,7 +87,8 @@ try {
               model: modelId,
               chatId,
               dataStream,
-              skipRelatedQuestions: shouldSkipRelatedQuestions
+              skipRelatedQuestions: shouldSkipRelatedQuestions,
+              addToolResult: config.addToolResult // <-- this line is critical
             })
           }
         })
