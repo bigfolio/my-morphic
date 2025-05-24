@@ -1,4 +1,3 @@
-
 import { researcher } from '@/lib/agents/researcher'
 import {
   convertToCoreMessages,

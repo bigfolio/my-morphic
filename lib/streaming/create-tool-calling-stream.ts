@@ -49,23 +49,28 @@ export function createToolCallingStreamResponse(config: BaseStreamConfig) {
 
 			await handleStreamFinish({
 			responseMessages: result.response.messages.map(msg => {
-				if (msg.role === 'assistant') {
+			const id = 'id' in msg ? msg.id : crypto.randomUUID()
+
+			if (msg.role === 'assistant' || msg.role === 'tool') {
 				return {
-					role: msg.role,
-					content: Array.isArray(msg.content)
+				id,
+				role: msg.role,
+				content: Array.isArray(msg.content)
 					? msg.content
 						.filter((c): c is { type: 'text'; text: string } => c.type === 'text')
 						.map(c => c.text)
 						.join('')
 					: msg.content
 				}
-				} else {
+			} else {
 				return {
-					role: msg.role,
-					content: typeof msg.content === 'string' ? msg.content : ''
+				id,
+				role: msg.role,
+				content: typeof msg.content === 'string' ? msg.content : ''
 				}
-				}
+			}
 			}),
+
 			originalMessages: messages,
 			model: modelId,
 			chatId,
