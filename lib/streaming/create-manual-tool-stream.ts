@@ -59,7 +59,9 @@ export function createManualToolStreamResponse(config: BaseStreamConfig & { addT
               if (msg.role === 'assistant') {
                 return {
                   role: msg.role,
-                  content: msg.content.map(c => c.text ?? '').join('')
+                  content: Array.isArray(msg.content)
+					? msg.content.map(c => c.text ?? '').join('')
+					: msg.content
                 }
               } else {
                 return {
