@@ -6,7 +6,6 @@ import {
   createDataStreamResponse,
   DataStreamWriter,
   streamText,
-  ResponseMessage
 } from 'ai'
 import { getMaxAllowedTokens, truncateMessages } from '../utils/context-window'
 import { isReasoningModel } from '../utils/registry'
@@ -71,7 +70,7 @@ export function createManualToolStreamResponse(config: BaseStreamConfig & { addT
             })
 
             await handleStreamFinish({
-              responseMessages: convertedMessages,
+              responseMessages: result.response.messages as any[], // Casting to avoid type error
               originalMessages: messages,
               model: modelId,
               chatId,
