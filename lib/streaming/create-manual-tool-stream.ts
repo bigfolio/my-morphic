@@ -57,15 +57,15 @@ export function createManualToolStreamResponse(config: BaseStreamConfig & { addT
             // ✅ Convert ResponseMessage[] to Message[]
             const convertedMessages = result.response.messages.map(msg => {
               if (msg.role === 'assistant') {
-                return {
-                  role: msg.role,
-                  content: Array.isArray(msg.content)
-					msg.content
-					.filter((c): c is { type: 'text'; text: string } => c.type === 'text')
-					.map(c => c.text)
-					.join('')
-					: msg.content
-                }
+			return {
+			role: msg.role,
+			content: Array.isArray(msg.content)
+				? msg.content
+				.filter((c): c is { type: 'text'; text: string } => c.type === 'text')
+				.map(c => c.text)
+				.join('')
+			: msg.content
+			}
               } else {
                 return {
                   role: msg.role,
