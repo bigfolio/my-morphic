@@ -60,7 +60,10 @@ export function createManualToolStreamResponse(config: BaseStreamConfig & { addT
                 return {
                   role: msg.role,
                   content: Array.isArray(msg.content)
-					? msg.content.map(c => c.text ?? '').join('')
+					msg.content
+					.filter((c): c is { type: 'text'; text: string } => c.type === 'text')
+					.map(c => c.text)
+					.join('')
 					: msg.content
                 }
               } else {
