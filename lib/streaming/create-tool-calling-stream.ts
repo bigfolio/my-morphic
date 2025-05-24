@@ -47,15 +47,32 @@ export function createToolCallingStreamResponse(config: BaseStreamConfig) {
                   result.response.messages[result.response.messages.length - 1] as CoreMessage
                 ))
 
-            await handleStreamFinish({
-              responseMessages: result.response.messages,
-              originalMessages: messages,
-              model: modelId,
-              chatId,
-              dataStream,
-              skipRelatedQuestions: shouldSkipRelatedQuestions,
-              addToolResult // ✅ this is what makes `data` available
-            })
+			await handleStreamFinish({
+			responseMessages: result.response.messages.map(msg => {
+				if (msg.role === 'assistant') {
+				return {
+					role: msg.role,
+					content: Array.isArray(msg.content)
+					? msg.content
+						.filter((c): c is { type: 'text'; text: string } => c.type === 'text')
+						.map(c => c.text)
+						.join('')
+					: msg.content
+				}
+				} else {
+				return {
+					role: msg.role,
+					content: typeof msg.content === 'string' ? msg.content : ''
+				}
+				}
+			}),
+			originalMessages: messages,
+			model: modelId,
+			chatId,
+			dataStream,
+			skipRelatedQuestions: shouldSkipRelatedQuestions,
+			addToolResult: config.addToolResult
+			})
           }
         })
 
