@@ -1,25 +1,34 @@
+
+import { researcher } from '@/lib/agents/researcher'
 import {
   convertToCoreMessages,
+  CoreMessage,
   createDataStreamResponse,
   DataStreamWriter,
-  JSONValue,
-  streamText
+  streamText,
+  ResponseMessage
 } from 'ai'
-import { manualResearcher } from '../agents/manual-researcher'
-import { ExtendedCoreMessage } from '../types'
 import { getMaxAllowedTokens, truncateMessages } from '../utils/context-window'
+import { isReasoningModel } from '../utils/registry'
 import { handleStreamFinish } from './handle-stream-finish'
-import { executeToolCall } from './tool-execution'
-import { BaseStreamConfig } from './types'
+import { BaseStreamConfig, HandleStreamFinishParams } from './types'
+import { searchTool } from '@/lib/tools/search'
 
-export function createManualToolStreamResponse(config: BaseStreamConfig) {
+function containsAskQuestionTool(message: CoreMessage) {
+  if (message.role !== 'assistant' || !Array.isArray(message.content)) {
+    return false
+  }
+
+  return message.content.some(
+    item => item.type === 'tool-call' && item.toolName === 'ask_question'
+  )
+}
+
+export function createManualToolStreamResponse(config: BaseStreamConfig & { addToolResult?: (result: any) => void }) {
   return createDataStreamResponse({
     execute: async (dataStream: DataStreamWriter) => {
       const { messages, model, chatId, searchMode } = config
       const modelId = `${model.providerId}:${model.id}`
-      let toolCallModelId = model.toolCallModel
-        ? `${model.providerId}:${model.toolCallModel}`
-        : modelId
 
       try {
         const coreMessages = convertToCoreMessages(messages)
@@ -28,81 +37,58 @@ export function createManualToolStreamResponse(config: BaseStreamConfig) {
           getMaxAllowedTokens(model)
         )
 
-        const { toolCallDataAnnotation, toolCallMessages } =
-          await executeToolCall(
-            truncatedMessages,
-            dataStream,
-            toolCallModelId,
-            searchMode
-          )
-
-        const researcherConfig = manualResearcher({
-          messages: [...truncatedMessages, ...toolCallMessages],
+        const researcherConfig = await researcher({
+          messages: truncatedMessages,
           model: modelId,
-          isSearchEnabled: searchMode
+          searchMode
         })
-
-        // Variables to track the reasoning timing.
-        let reasoningStartTime: number | null = null
-        let reasoningDuration: number | null = null
 
         const result = streamText({
           ...researcherConfig,
           onFinish: async result => {
-            const annotations: ExtendedCoreMessage[] = [
-              ...(toolCallDataAnnotation ? [toolCallDataAnnotation] : []),
-              {
-                role: 'data',
-                content: {
-                  type: 'reasoning',
-                  data: {
-                    time: reasoningDuration ?? 0,
-                    reasoning: result.reasoning
-                  }
-                } as JSONValue
+            const shouldSkipRelatedQuestions =
+              isReasoningModel(modelId) ||
+              (result.response.messages.length > 0 &&
+                containsAskQuestionTool(
+                  result.response.messages[
+                    result.response.messages.length - 1
+                  ] as CoreMessage
+                ))
+
+            // ✅ Convert ResponseMessage[] to Message[]
+            const convertedMessages = result.response.messages.map(msg => {
+              if (msg.role === 'assistant') {
+                return {
+                  role: msg.role,
+                  content: msg.content.map(c => c.text ?? '').join('')
+                }
+              } else {
+                return {
+                  role: msg.role,
+                  content: typeof msg.content === 'string' ? msg.content : ''
+                }
               }
-            ]
+            })
 
             await handleStreamFinish({
-              responseMessages: result.response.messages,
+              responseMessages: convertedMessages,
               originalMessages: messages,
               model: modelId,
               chatId,
               dataStream,
-              skipRelatedQuestions: true,
-              annotations
+              skipRelatedQuestions: shouldSkipRelatedQuestions,
+              addToolResult: config.addToolResult
             })
-          },
-          onChunk(event) {
-            const chunkType = event.chunk?.type
-
-            if (chunkType === 'reasoning') {
-              if (reasoningStartTime === null) {
-                reasoningStartTime = Date.now()
-              }
-            } else {
-              if (reasoningStartTime !== null) {
-                const elapsedTime = Date.now() - reasoningStartTime
-                reasoningDuration = elapsedTime
-                dataStream.writeMessageAnnotation({
-                  type: 'reasoning',
-                  data: { time: elapsedTime }
-                } as JSONValue)
-                reasoningStartTime = null
-              }
-            }
           }
         })
 
-        result.mergeIntoDataStream(dataStream, {
-          sendReasoning: true
-        })
+        result.mergeIntoDataStream(dataStream)
       } catch (error) {
         console.error('Stream execution error:', error)
+        throw error
       }
     },
     onError: error => {
-      console.error('Stream error:', error)
       return error instanceof Error ? error.message : String(error)
     }
   })
