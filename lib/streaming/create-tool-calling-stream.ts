@@ -78,15 +78,39 @@ export function createToolCallingStreamResponse(
                   ] as CoreMessage
                 ))
 
-            await handleStreamFinish({
-              responseMessages: result.response.messages,
-              originalMessages: messages,
-              model: modelId,
-              chatId,
-              dataStream,
-              skipRelatedQuestions: shouldSkipRelatedQuestions,
-              addToolResult
-            })
+const plainMessages = result.response.messages.map(msg => {
+  const id = 'id' in msg ? msg.id : crypto.randomUUID()
+
+  if (msg.role === 'assistant' || msg.role === 'tool') {
+    return {
+      id,
+      role: msg.role === 'tool' ? 'data' : 'assistant',
+      content: Array.isArray(msg.content)
+        ? msg.content
+            .filter((c): c is { type: 'text'; text: string } => c.type === 'text')
+            .map(c => c.text)
+            .join('')
+        : msg.content
+    }
+  }
+
+  return {
+    id,
+    role: msg.role,
+    content: typeof msg.content === 'string' ? msg.content : ''
+  }
+})
+
+await handleStreamFinish({
+  responseMessages: plainMessages,
+  originalMessages: messages,
+  model: modelId,
+  chatId,
+  dataStream,
+  skipRelatedQuestions: shouldSkipRelatedQuestions,
+  addToolResult
+})
+
           }
         })
 
