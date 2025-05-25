@@ -6,15 +6,15 @@ export interface BaseStreamConfig {
   model: Model
   chatId: string
   searchMode: boolean
-  addToolResult?: (result: any) => void // ✅ Include this here
+  addToolResult?: (result: any) => void
 }
 
 export interface HandleStreamFinishParams {
-  responseMessages: any[]
+  responseMessages: Message[]
   originalMessages: Message[]
   model: string
   chatId: string
   dataStream: any
   skipRelatedQuestions: boolean
-  addToolResult?: (result: any) => void // ✅ Include this too
+  addToolResult?: (result: any) => void
 }
