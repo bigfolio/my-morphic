@@ -9,9 +9,12 @@ import {
 import { getMaxAllowedTokens, truncateMessages } from '../utils/context-window'
 import { isReasoningModel } from '../utils/registry'
 import { handleStreamFinish } from './handle-stream-finish'
-import { BaseStreamConfig } from './types'
+import { BaseStreamConfig, HandleStreamFinishParams } from './types'
+
+// ✅ Import search tool for debug testing
 import { searchTool } from '@/lib/tools/search'
 
+// Function to check if a message contains ask_question tool invocation
 function containsAskQuestionTool(message: CoreMessage) {
   if (message.role !== 'assistant' || !Array.isArray(message.content)) return false
   return message.content.some(
@@ -20,9 +23,7 @@ function containsAskQuestionTool(message: CoreMessage) {
 }
 
 export function createToolCallingStreamResponse(
-  config: BaseStreamConfig & {
-    addToolResult?: (result: any) => void
-  }
+  config: BaseStreamConfig & { addToolResult?: (result: any) => void }
 ) {
   return createDataStreamResponse({
     execute: async (dataStream: DataStreamWriter) => {
@@ -31,7 +32,10 @@ export function createToolCallingStreamResponse(
 
       try {
         const coreMessages = convertToCoreMessages(messages)
-        const truncatedMessages = truncateMessages(coreMessages, getMaxAllowedTokens(model))
+        const truncatedMessages = truncateMessages(
+          coreMessages,
+          getMaxAllowedTokens(model)
+        )
 
         const researcherConfig = await researcher({
           messages: truncatedMessages,
@@ -41,6 +45,27 @@ export function createToolCallingStreamResponse(
 
         console.log('🔧 researcherConfig:', JSON.stringify(researcherConfig, null, 2))
 
+        // 🧪 DEBUG: Manually test searchTool
+        try {
+          console.log('🧪 Forcing searchTool to run manually with query "cats"')
+          const debugResult = await searchTool.execute(
+            {
+              query: 'cats',
+              max_results: 5,
+              search_depth: 'basic',
+              include_domains: [],
+              exclude_domains: []
+            },
+            {
+              toolCallId: 'debug-test',
+              messages: []
+            }
+          )
+          console.log('🧪 Manual search result:', JSON.stringify(debugResult, null, 2))
+        } catch (manualError) {
+          console.error('❌ Manual searchTool.execute() failed:', manualError)
+        }
+
         const result = streamText({
           ...researcherConfig,
           onFinish: async result => {
@@ -48,45 +73,22 @@ export function createToolCallingStreamResponse(
               isReasoningModel(modelId) ||
               (result.response.messages.length > 0 &&
                 containsAskQuestionTool(
-                  result.response.messages[result.response.messages.length - 1] as CoreMessage
+                  result.response.messages[
+                    result.response.messages.length - 1
+                  ] as CoreMessage
                 ))
 
-await handleStreamFinish({
-  responseMessages: result.response.messages.map((msg: any) => {
-    const id = 'id' in msg ? msg.id : crypto.randomUUID()
-    if (msg.role === 'assistant') {
-      return {
-        id,
-        role: 'assistant',
-        content: Array.isArray(msg.content)
-          ? msg.content
-              .filter((c: any): c is { type: 'text'; text: string } => c.type === 'text')
-              .map(c => c.text)
-              .join('')
-          : msg.content
-      }
-    }
-    if (msg.role === 'tool') {
-      return {
-        id,
-        role: 'data',
-        content: JSON.stringify(msg.content)
-      }
-    }
-    return {
-      id,
-      role: msg.role,
-      content: typeof msg.content === 'string' ? msg.content : ''
-    }
-  }),
-  originalMessages: messages,
-  model: modelId,
-  chatId,
-  dataStream,
-  skipRelatedQuestions: shouldSkipRelatedQuestions,
-  ...(config.addToolResult && { addToolResult: config.addToolResult }) // ✅ conditionally spread
-})
-
+            await handleStreamFinish({
+              responseMessages: result.response.messages,
+              originalMessages: messages,
+              model: modelId,
+              chatId,
+              dataStream,
+              skipRelatedQuestions: shouldSkipRelatedQuestions,
+              addToolResult
+            })
+          }
+        })
 
         result.mergeIntoDataStream(dataStream)
       } catch (error) {
