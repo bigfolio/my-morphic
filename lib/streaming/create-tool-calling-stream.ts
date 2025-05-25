@@ -48,13 +48,14 @@ export function createToolCallingStreamResponse(config: BaseStreamConfig) {
                 ))
 
 			await handleStreamFinish({
-			responseMessages: result.response.messages.map(msg => {
-  const id = 'id' in msg ? msg.id : crypto.randomUUID()
+			responseMessages: result.response.messages
+  .filter(msg => msg.role !== 'tool') // 🔥 Filter out 'tool' messages
+  .map(msg => {
+    const id = 'id' in msg ? msg.id : crypto.randomUUID()
 
-  if (msg.role === 'assistant' || msg.role === 'tool') {
     return {
       id,
-      role: msg.role,
+      role: msg.role as 'system' | 'user' | 'assistant' | 'data', // ✅ Ensure type safety
       content: Array.isArray(msg.content)
         ? msg.content
             .filter((c): c is { type: 'text'; text: string } => c.type === 'text')
@@ -62,17 +63,7 @@ export function createToolCallingStreamResponse(config: BaseStreamConfig) {
             .join('')
         : msg.content
     }
-  } else {
-    // ✅ Add explicit type assertion here
-    const safeMsg = msg as { role: 'user' | 'system'; content: string }
-
-    return {
-      id,
-      role: safeMsg.role,
-      content: safeMsg.content
-    }
-  }
-}),
+  }),
 
 			originalMessages: messages,
 			model: modelId,
