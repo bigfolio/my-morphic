@@ -49,29 +49,22 @@ export async function handleStreamFinish({
   // ✅ Add structured tool result to render search UI
   const lastToolMsg = responseMessages.find(m => (m as any).role === 'tool')
 
-  if (addToolResult && lastToolMsg) {
-    const toolData = {
+if (addToolResult && lastToolMsg) {
+  const toolData = {
+    role: 'data',
+    content: {
       tool: 'search',
       state: 'result',
-      ...(typeof lastToolMsg.content === 'object'
-        ? lastToolMsg.content
-        : JSON.parse(lastToolMsg.content || '{}'))
+      ...(typeof lastToolMsg.content === 'object' ? lastToolMsg.content : {})
     }
-
-    console.log('🧪 Sending toolData into addToolResult:', toolData)
-
-    addToolResult({
-      role: 'data',
-      content: JSON.stringify(toolData),
-      id: crypto.randomUUID()
-    })
-
-    dataStream.write({
-      role: 'data',
-      content: JSON.stringify(toolData),
-      id: crypto.randomUUID()
-    })
   }
+
+  console.log('🧪 Sending toolData into addToolResult:', toolData)
+
+  addToolResult(toolData) // ✅ KEEP this
+  // ❌ REMOVE this → dataStream.write(toolData)
+}
+
 
   dataStream.close()
 }
