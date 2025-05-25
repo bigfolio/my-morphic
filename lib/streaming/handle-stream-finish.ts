@@ -10,9 +10,8 @@ export async function handleStreamFinish({
   skipRelatedQuestions,
   addToolResult
 }: HandleStreamFinishParams) {
-  // Convert the response messages into standard format
-  const finalMessages: Message[] = responseMessages.map(msg => {
-    const id = 'id' in msg ? msg.id : crypto.randomUUID()
+  const finalMessages: Message[] = responseMessages.map((msg: any) => {
+    const id = msg.id || crypto.randomUUID()
 
     if (msg.role === 'assistant') {
       return {
@@ -20,18 +19,18 @@ export async function handleStreamFinish({
         role: 'assistant',
         content: Array.isArray(msg.content)
           ? msg.content
-              .filter((c: any): c is { type: 'text'; text: string } => c.type === 'text')
-              .map(c => c.text)
+              .filter((c: any) => c.type === 'text')
+              .map((c: any) => c.text)
               .join('')
           : msg.content
       }
     }
 
-    if ((msg as any).role === 'tool') {
+    if (msg.role === 'tool') {
       return {
         id,
         role: 'data',
-        content: JSON.stringify((msg as any).content)
+        content: JSON.stringify(msg.content) // 🧠 Important: stringify here
       }
     }
 
@@ -46,25 +45,25 @@ export async function handleStreamFinish({
     dataStream.write(message)
   }
 
-  // ✅ Add structured tool result to render search UI
-  const lastToolMsg = responseMessages.find(m => (m as any).role === 'tool')
+  // ✅ Add structured tool result so `data` becomes populated in `useChat()`
+  const lastToolMsg = responseMessages.find((m: any) => m.role === 'tool')
 
-if (addToolResult && lastToolMsg) {
-  const toolData = {
-    role: 'data',
-    content: {
-      tool: 'search',
-      state: 'result',
-      ...(typeof lastToolMsg.content === 'object' ? lastToolMsg.content : {})
+  if (addToolResult && lastToolMsg) {
+    const toolData = {
+      role: 'data',
+      content: {
+        tool: 'search',
+        state: 'result',
+        ...(typeof lastToolMsg.content === 'object'
+          ? lastToolMsg.content
+          : JSON.parse(lastToolMsg.content || '{}'))
+      }
     }
+
+    console.log('🧪 Sending toolData into addToolResult:', toolData)
+    addToolResult(toolData)
+    dataStream.write(toolData)
   }
-
-  console.log('🧪 Sending toolData into addToolResult:', toolData)
-
-  addToolResult(toolData) // ✅ KEEP this
-  // ❌ REMOVE this → dataStream.write(toolData)
-}
-
 
   dataStream.close()
 }

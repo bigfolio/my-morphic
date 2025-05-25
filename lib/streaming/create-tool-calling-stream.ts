@@ -9,22 +9,19 @@ import {
 import { getMaxAllowedTokens, truncateMessages } from '../utils/context-window'
 import { isReasoningModel } from '../utils/registry'
 import { handleStreamFinish } from './handle-stream-finish'
-import { BaseStreamConfig, HandleStreamFinishParams } from './types'
+import { BaseStreamConfig } from './types'
 
-// ✅ Import search tool for debug testing
-import { searchTool } from '@/lib/tools/search'
-
-// Function to check if a message contains ask_question tool invocation
 function containsAskQuestionTool(message: CoreMessage) {
-  if (message.role !== 'assistant' || !Array.isArray(message.content)) return false
+  if (message.role !== 'assistant' || !Array.isArray(message.content)) {
+    return false
+  }
+
   return message.content.some(
     item => item.type === 'tool-call' && item.toolName === 'ask_question'
   )
 }
 
-export function createToolCallingStreamResponse(
-  config: BaseStreamConfig & { addToolResult?: (result: any) => void }
-) {
+export function createToolCallingStreamResponse(config: BaseStreamConfig) {
   return createDataStreamResponse({
     execute: async (dataStream: DataStreamWriter) => {
       const { messages, model, chatId, searchMode, addToolResult } = config
@@ -43,29 +40,6 @@ export function createToolCallingStreamResponse(
           searchMode
         })
 
-        console.log('🔧 researcherConfig:', JSON.stringify(researcherConfig, null, 2))
-
-        // 🧪 DEBUG: Manually test searchTool
-        try {
-          console.log('🧪 Forcing searchTool to run manually with query "cats"')
-          const debugResult = await searchTool.execute(
-            {
-              query: 'cats',
-              max_results: 5,
-              search_depth: 'basic',
-              include_domains: [],
-              exclude_domains: []
-            },
-            {
-              toolCallId: 'debug-test',
-              messages: []
-            }
-          )
-          console.log('🧪 Manual search result:', JSON.stringify(debugResult, null, 2))
-        } catch (manualError) {
-          console.error('❌ Manual searchTool.execute() failed:', manualError)
-        }
-
         const result = streamText({
           ...researcherConfig,
           onFinish: async result => {
@@ -78,40 +52,15 @@ export function createToolCallingStreamResponse(
                   ] as CoreMessage
                 ))
 
-const plainMessages = result.response.messages.map((msg: any) => {
-  const id = 'id' in msg ? msg.id : crypto.randomUUID()
-
-  if (msg.role === 'assistant' || msg.role === 'tool') {
-    return {
-      id,
-      role: msg.role === 'tool' ? 'data' : 'assistant',
-      content: Array.isArray(msg.content)
-        ? msg.content
-            .filter((c: any) => c.type === 'text')
-            .map((c: any) => c.text)
-            .join('')
-        : msg.content
-    }
-  }
-
-  return {
-    id,
-    role: msg.role,
-    content: typeof msg.content === 'string' ? msg.content : ''
-  }
-})
-
-
-await handleStreamFinish({
-  responseMessages: plainMessages,
-  originalMessages: messages,
-  model: modelId,
-  chatId,
-  dataStream,
-  skipRelatedQuestions: shouldSkipRelatedQuestions,
-  addToolResult
-})
-
+            await handleStreamFinish({
+              responseMessages: result.response.messages,
+              originalMessages: messages,
+              model: modelId,
+              chatId,
+              dataStream,
+              skipRelatedQuestions: shouldSkipRelatedQuestions,
+              addToolResult // ✅ Passed through cleanly
+            })
           }
         })
 
@@ -121,8 +70,7 @@ await handleStreamFinish({
         throw error
       }
     },
-    onError: error => {
-      return error instanceof Error ? error.message : String(error)
-    }
+    onError: error =>
+      error instanceof Error ? error.message : String(error)
   })
 }
