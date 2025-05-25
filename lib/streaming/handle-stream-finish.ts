@@ -10,6 +10,7 @@ export async function handleStreamFinish({
   skipRelatedQuestions,
   addToolResult
 }: HandleStreamFinishParams) {
+  // Convert the response messages into standard format
   const finalMessages: Message[] = responseMessages.map(msg => {
     const id = 'id' in msg ? msg.id : crypto.randomUUID()
 
@@ -19,7 +20,7 @@ export async function handleStreamFinish({
         role: 'assistant',
         content: Array.isArray(msg.content)
           ? msg.content
-              .filter((c): c is { type: 'text'; text: string } => c.type === 'text')
+              .filter((c: any): c is { type: 'text'; text: string } => c.type === 'text')
               .map(c => c.text)
               .join('')
           : msg.content
@@ -30,7 +31,7 @@ export async function handleStreamFinish({
       return {
         id,
         role: 'data',
-        content: msg.content as any
+        content: JSON.stringify((msg as any).content)
       }
     }
 
@@ -45,26 +46,32 @@ export async function handleStreamFinish({
     dataStream.write(message)
   }
 
- if (addToolResult && lastToolMsg) {
-  const toolData = {
-    tool: 'search',
-    state: 'result',
-    ...(typeof lastToolMsg.content === 'object'
-      ? lastToolMsg.content
-      : JSON.parse(lastToolMsg.content || '{}'))
+  // ✅ Add structured tool result to render search UI
+  const lastToolMsg = responseMessages.find(m => (m as any).role === 'tool')
+
+  if (addToolResult && lastToolMsg) {
+    const toolData = {
+      tool: 'search',
+      state: 'result',
+      ...(typeof lastToolMsg.content === 'object'
+        ? lastToolMsg.content
+        : JSON.parse(lastToolMsg.content || '{}'))
+    }
+
+    console.log('🧪 Sending toolData into addToolResult:', toolData)
+
+    addToolResult({
+      role: 'data',
+      content: JSON.stringify(toolData),
+      id: crypto.randomUUID()
+    })
+
+    dataStream.write({
+      role: 'data',
+      content: JSON.stringify(toolData),
+      id: crypto.randomUUID()
+    })
   }
 
-  console.log('🧪 Sending toolData into addToolResult:', toolData)
-
-  addToolResult({
-    role: 'data',
-    content: JSON.stringify(toolData),
-    id: crypto.randomUUID()
-  })
-
-  dataStream.write({
-    role: 'data',
-    content: JSON.stringify(toolData),
-    id: crypto.randomUUID()
-  })
+  dataStream.close()
 }
