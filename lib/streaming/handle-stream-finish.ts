@@ -47,7 +47,7 @@ export async function handleStreamFinish({
   }
 
   // ✅ Add structured tool result to render search UI
-  const lastToolMsg = responseMessages.find(m => m.role === 'tool')
+  const lastToolMsg = responseMessages.find(m => (m as any).role === 'tool')
 
   if (addToolResult && lastToolMsg) {
     const toolData = {
