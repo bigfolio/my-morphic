@@ -10,7 +10,6 @@ export async function handleStreamFinish({
   skipRelatedQuestions,
   addToolResult
 }: HandleStreamFinishParams) {
-  // Convert the response messages into standard format
   const finalMessages: Message[] = responseMessages.map(msg => {
     const id = 'id' in msg ? msg.id : crypto.randomUUID()
 
@@ -46,21 +45,18 @@ export async function handleStreamFinish({
     dataStream.write(message)
   }
 
-  // ✅ Add structured tool result to render search UI
+  // ✅ Send to addToolResult() properly
   const lastToolMsg = responseMessages.find(m => (m as any).role === 'tool')
 
   if (addToolResult && lastToolMsg) {
     const toolData = {
-      role: 'data',
-      content: {
-        tool: 'search',
-        state: 'result',
-        ...(typeof lastToolMsg.content === 'object' ? lastToolMsg.content : {})
-      }
+      tool: 'search',
+      state: 'result',
+      ...(typeof lastToolMsg.content === 'object' ? lastToolMsg.content : {})
     }
 
-    addToolResult(toolData)
-    dataStream.write(toolData)
+    console.log('🧪 Sending toolData into addToolResult:', toolData)
+    addToolResult(toolData) // ✅ Send flat object only
   }
 
   dataStream.close()
