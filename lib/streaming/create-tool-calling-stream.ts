@@ -78,7 +78,7 @@ export function createToolCallingStreamResponse(
                   ] as CoreMessage
                 ))
 
-const plainMessages = result.response.messages.map(msg => {
+const plainMessages = result.response.messages.map((msg: any) => {
   const id = 'id' in msg ? msg.id : crypto.randomUUID()
 
   if (msg.role === 'assistant' || msg.role === 'tool') {
@@ -87,8 +87,8 @@ const plainMessages = result.response.messages.map(msg => {
       role: msg.role === 'tool' ? 'data' : 'assistant',
       content: Array.isArray(msg.content)
         ? msg.content
-            .filter((c): c is { type: 'text'; text: string } => c.type === 'text')
-            .map(c => c.text)
+            .filter((c: any) => c.type === 'text')
+            .map((c: any) => c.text)
             .join('')
         : msg.content
     }
@@ -100,6 +100,7 @@ const plainMessages = result.response.messages.map(msg => {
     content: typeof msg.content === 'string' ? msg.content : ''
   }
 })
+
 
 await handleStreamFinish({
   responseMessages: plainMessages,
