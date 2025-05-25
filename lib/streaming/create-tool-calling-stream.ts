@@ -51,33 +51,42 @@ export function createToolCallingStreamResponse(
                   result.response.messages[result.response.messages.length - 1] as CoreMessage
                 ))
 
-			await handleStreamFinish({
-			responseMessages: result.response.messages
-  .filter(msg => msg.role !== 'tool') // 🔥 Filter out 'tool' messages
-  .map(msg => {
+await handleStreamFinish({
+  responseMessages: result.response.messages.map((msg: any) => {
     const id = 'id' in msg ? msg.id : crypto.randomUUID()
-
+    if (msg.role === 'assistant') {
+      return {
+        id,
+        role: 'assistant',
+        content: Array.isArray(msg.content)
+          ? msg.content
+              .filter((c: any): c is { type: 'text'; text: string } => c.type === 'text')
+              .map(c => c.text)
+              .join('')
+          : msg.content
+      }
+    }
+    if (msg.role === 'tool') {
+      return {
+        id,
+        role: 'data',
+        content: JSON.stringify(msg.content)
+      }
+    }
     return {
       id,
-      role: msg.role as 'system' | 'user' | 'assistant' | 'data', // ✅ Ensure type safety
-      content: Array.isArray(msg.content)
-        ? msg.content
-            .filter((c): c is { type: 'text'; text: string } => c.type === 'text')
-            .map(c => c.text)
-            .join('')
-        : msg.content
+      role: msg.role,
+      content: typeof msg.content === 'string' ? msg.content : ''
     }
   }),
+  originalMessages: messages,
+  model: modelId,
+  chatId,
+  dataStream,
+  skipRelatedQuestions: shouldSkipRelatedQuestions,
+  ...(config.addToolResult && { addToolResult: config.addToolResult }) // ✅ conditionally spread
+})
 
-			originalMessages: messages,
-			model: modelId,
-			chatId,
-			dataStream,
-			skipRelatedQuestions: shouldSkipRelatedQuestions,
-			addToolResult: config.addToolResult
-			})
-          }
-        })
 
         result.mergeIntoDataStream(dataStream)
       } catch (error) {

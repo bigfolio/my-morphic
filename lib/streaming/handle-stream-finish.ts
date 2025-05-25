@@ -45,27 +45,26 @@ export async function handleStreamFinish({
     dataStream.write(message)
   }
 
- if (addToolResult) {
-  console.log('✅ addToolResult exists')
-
-  const lastToolMsg = responseMessages.find(m => (m as any).role === 'tool')
-
-  if (lastToolMsg) {
-    const toolData = {
-      tool: 'search',
-      state: 'result',
-      ...(typeof lastToolMsg.content === 'object' ? lastToolMsg.content : {})
-    }
-
-    console.log('🧪 Sending toolData into addToolResult:', toolData)
-    addToolResult(toolData)
-  } else {
-    console.log('⚠️ No tool message found in responseMessages')
+ if (addToolResult && lastToolMsg) {
+  const toolData = {
+    tool: 'search',
+    state: 'result',
+    ...(typeof lastToolMsg.content === 'object'
+      ? lastToolMsg.content
+      : JSON.parse(lastToolMsg.content || '{}'))
   }
-} else {
-  console.log('❌ addToolResult is undefined')
-}
 
+  console.log('🧪 Sending toolData into addToolResult:', toolData)
 
-  dataStream.close()
+  addToolResult({
+    role: 'data',
+    content: JSON.stringify(toolData),
+    id: crypto.randomUUID()
+  })
+
+  dataStream.write({
+    role: 'data',
+    content: JSON.stringify(toolData),
+    id: crypto.randomUUID()
+  })
 }
