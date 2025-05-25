@@ -76,13 +76,15 @@ export async function POST(req: Request) {
           messages,
           model: selectedModel,
           chatId,
-          searchMode
+          searchMode,
+		  addToolResult // ✅ This must be passed from useChat context
         })
       : createManualToolStreamResponse({
           messages,
           model: selectedModel,
           chatId,
-          searchMode
+          searchMode,
+		  addToolResult // ✅ This must be passed from useChat context
         })
   } catch (error) {
     console.error('❌ API error:', error)

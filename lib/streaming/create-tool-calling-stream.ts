@@ -20,6 +20,8 @@ function containsAskQuestionTool(message: CoreMessage) {
 }
 
 export function createToolCallingStreamResponse(config: BaseStreamConfig) {
+	addToolResult?: (result: any) => void
+}) {
   return createDataStreamResponse({
     execute: async (dataStream: DataStreamWriter) => {
       const { messages, model, chatId, searchMode, addToolResult } = config

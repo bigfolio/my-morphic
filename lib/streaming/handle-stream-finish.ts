@@ -45,10 +45,12 @@ export async function handleStreamFinish({
     dataStream.write(message)
   }
 
-  // ✅ Send to addToolResult() properly
+ if (addToolResult) {
+  console.log('✅ addToolResult exists')
+
   const lastToolMsg = responseMessages.find(m => (m as any).role === 'tool')
 
-  if (addToolResult && lastToolMsg) {
+  if (lastToolMsg) {
     const toolData = {
       tool: 'search',
       state: 'result',
@@ -56,8 +58,14 @@ export async function handleStreamFinish({
     }
 
     console.log('🧪 Sending toolData into addToolResult:', toolData)
-    addToolResult(toolData) // ✅ Send flat object only
+    addToolResult(toolData)
+  } else {
+    console.log('⚠️ No tool message found in responseMessages')
   }
+} else {
+  console.log('❌ addToolResult is undefined')
+}
+
 
   dataStream.close()
 }
