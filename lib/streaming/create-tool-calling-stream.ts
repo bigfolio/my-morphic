@@ -112,7 +112,7 @@ await handleStreamFinish({
   addToolResult
 })
 
-          }a
+          }
         })
 
         result.mergeIntoDataStream(dataStream)
