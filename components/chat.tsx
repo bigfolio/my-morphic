@@ -88,10 +88,12 @@ console.log('🧪 useChat().data:', data)
       {/* ✅ Conditionally show search section if tool result is available */}
      {typeof data === 'object' &&
   data !== null &&
+  !Array.isArray(data) &&
   'tool' in data &&
-  data.tool === 'search' &&
-  data.state === 'result' && (
-    <SearchSection tool={data} isOpen={true} onOpenChange={() => {}} />
+  (data as any).tool === 'search' &&
+  'state' in data &&
+  (data as any).state === 'result' && (
+    <SearchSection tool={data as any} isOpen={true} onOpenChange={() => {}} />
 )}
 
       <ChatPanel
