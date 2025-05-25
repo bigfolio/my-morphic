@@ -27,7 +27,7 @@ export async function handleStreamFinish({
       }
     }
 
-    if (msg.role === 'tool') {
+    if ((msg as any).role === 'tool') {
       return {
         id,
         role: 'data',
