@@ -32,17 +32,16 @@ export function SearchSection({
 }: SearchSectionProps) {
   const { isLoading } = useChat({ id: CHAT_ID })
 
-  const query = tool.args?.query as string | undefined
-  const includeDomains = tool.args?.includeDomains as string[] | undefined
-  const includeDomainsString = includeDomains
-    ? ` [${includeDomains.join(', ')}]`
-    : ''
+	const query = tool.query
+	const includeDomains = [] // or hardcode based on need
+	const includeDomainsString = ''
+
 
   const header = (
     <ToolArgsSection
-      tool="search"
-      number={tool?.result?.results?.length || 0}
-    >{`${query}${includeDomainsString}`}</ToolArgsSection>
+  tool="search"
+  number={tool.results?.length || 0}
+>{`${tool.query}`}</ToolArgsSection>
   )
 
   // 🔄 Handle different tool states
