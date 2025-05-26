@@ -9,7 +9,7 @@ import { toast } from 'sonner'
 import { ChatMessages } from './chat-messages'
 import { ChatPanel } from './chat-panel'
 import { SearchSection } from './search-section' // ✅ Adjust if path differs
-import type { SearchToolData } from './search-section'
+
 
 
 export function Chat({
@@ -95,7 +95,7 @@ export function Chat({
 
       {/* ✅ Conditionally show search section if tool result is available */}
       {isSearchToolResult && (
-        <SearchSection tool={data as SearchToolData} isOpen={true} onOpenChange={() => {}} />
+        <SearchSection tool={data as any} isOpen={true} onOpenChange={() => {}} />
       )}
 
       <ChatPanel
