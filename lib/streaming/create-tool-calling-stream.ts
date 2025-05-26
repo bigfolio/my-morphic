@@ -109,7 +109,7 @@ await handleStreamFinish({
   chatId,
   dataStream,
   skipRelatedQuestions: shouldSkipRelatedQuestions,
-  addToolResult
+  addToolResult: config.addToolResult // ✅ explicitly pass it from config
 })
 
           }

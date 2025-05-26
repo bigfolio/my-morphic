@@ -2,7 +2,7 @@
 
 import { CHAT_ID } from '@/lib/constants'
 import { Model } from '@/lib/types/models'
-import { useChat } from '@ai-sdk/react'
+import { useChat } from 'ai/react' // ✅ NOT '@ai-sdk/react'
 import { Message } from 'ai/react'
 import { useEffect } from 'react'
 import { toast } from 'sonner'
@@ -89,11 +89,17 @@ console.log('🧪 useChat().data:', data)
      {typeof data === 'object' &&
   data !== null &&
   !Array.isArray(data) &&
-  'tool' in data &&
-  (data as any).tool === 'search' &&
-  'state' in data &&
-  (data as any).state === 'result' && (
-    <SearchSection tool={data as any} isOpen={true} onOpenChange={() => {}} />
+  'role' in data &&
+  (data as any).role === 'data' &&
+  'content' in data &&
+  typeof (data as any).content === 'object' &&
+  (data as any).content.tool === 'search' &&
+  (data as any).content.state === 'result' && (
+    <SearchSection
+      tool={(data as any).content}
+      isOpen={true}
+      onOpenChange={() => {}}
+    />
 )}
 
       <ChatPanel

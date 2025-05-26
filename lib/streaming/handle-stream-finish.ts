@@ -61,8 +61,19 @@ if (addToolResult && lastToolMsg) {
 
   console.log('🧪 Sending toolData into addToolResult:', toolData)
 
-  addToolResult(toolData) // ✅ KEEP this
-  // ❌ REMOVE this → dataStream.write(toolData)
+  // ✅ Send tool data to the React hook context (useChat().data)
+  addToolResult({
+    role: 'data',
+    content: toolData,
+    id: crypto.randomUUID()
+  })
+
+  // ✅ Also write it into the stream for visibility (OPTIONAL but safe)
+  dataStream.write({
+    role: 'data',
+    content: JSON.stringify(toolData),
+    id: crypto.randomUUID()
+  })
 }
 
 
