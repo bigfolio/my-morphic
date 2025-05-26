@@ -50,25 +50,29 @@ export async function handleStreamFinish({
   const lastToolMsg = responseMessages.find(m => (m as any).role === 'tool')
 
 if (addToolResult && lastToolMsg) {
-  const toolData = {
-  tool: 'search',
-  state: 'result',
-  ...(typeof lastToolMsg.content === 'object' ? lastToolMsg.content : {})
-}
+  const toolData = typeof lastToolMsg.content === 'object' ? lastToolMsg.content : {}
 
-console.log('🧪 Sending toolData into addToolResult:', toolData)
-addToolResult({
-  role: 'data',
-  content: toolData,
-  id: crypto.randomUUID()
-})
+  const structuredData = {
+    tool: 'search',
+    state: 'result',
+    query: toolData.query,
+    results: toolData.results,
+    images: toolData.images
+  }
 
-// ✅ Now write it as a string for the stream
-dataStream.write({
-  role: 'data',
-  content: JSON.stringify(toolData),
-  id: crypto.randomUUID()
-})
+  console.log('🧪 Sending toolData into addToolResult:', structuredData)
+
+  addToolResult({
+    role: 'data',
+    content: structuredData,
+    id: crypto.randomUUID()
+  })
+
+  dataStream.write({
+    role: 'data',
+    content: JSON.stringify(structuredData),
+    id: crypto.randomUUID()
+  })
 }
 
 

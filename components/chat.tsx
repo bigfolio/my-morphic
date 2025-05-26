@@ -89,17 +89,10 @@ console.log('🧪 useChat().data:', data)
      {typeof data === 'object' &&
   data !== null &&
   !Array.isArray(data) &&
-  'role' in data &&
-  (data as any).role === 'data' &&
-  'content' in data &&
-  typeof (data as any).content === 'object' &&
-  (data as any).content.tool === 'search' &&
-  (data as any).content.state === 'result' && (
-    <SearchSection
-      tool={(data as any).content}
-      isOpen={true}
-      onOpenChange={() => {}}
-    />
+  'tool' in data &&
+  data.tool === 'search' &&
+  data.state === 'result' && (
+    <SearchSection tool={data} isOpen={true} onOpenChange={() => {}} />
 )}
 
       <ChatPanel
