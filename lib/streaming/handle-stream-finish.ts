@@ -66,11 +66,7 @@ addToolResult({
 // ✅ Now write it as a string for the stream
 dataStream.write({
   role: 'data',
-  content: JSON.stringify({
-    tool: 'search',
-    state: 'result',
-    ...toolData
-  }),
+  content: JSON.stringify(toolData),
   id: crypto.randomUUID()
 })
 }
