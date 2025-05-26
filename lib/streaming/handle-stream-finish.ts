@@ -50,29 +50,15 @@ export async function handleStreamFinish({
   const lastToolMsg = responseMessages.find(m => (m as any).role === 'tool')
 
 if (addToolResult && lastToolMsg) {
-  const toolData = typeof lastToolMsg.content === 'object' ? lastToolMsg.content : {}
-
-  const structuredData = {
+  const toolResult = {
     tool: 'search',
     state: 'result',
-    query: toolData.query,
-    results: toolData.results,
-    images: toolData.images
+    ...(typeof lastToolMsg.content === 'object' ? lastToolMsg.content : {})
   }
 
-  console.log('🧪 Sending toolData into addToolResult:', structuredData)
-
-  addToolResult({
-    role: 'data',
-    content: structuredData,
-    id: crypto.randomUUID()
-  })
-
-  dataStream.write({
-    role: 'data',
-    content: JSON.stringify(structuredData),
-    id: crypto.randomUUID()
-  })
+  console.log('🧪 Sending toolResult into addToolResult:', toolResult)
+  addToolResult(toolResult) // ✅ This is how Morphic gets the structured data
+}
 }
 
 

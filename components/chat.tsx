@@ -2,13 +2,21 @@
 
 import { CHAT_ID } from '@/lib/constants'
 import { Model } from '@/lib/types/models'
-import { useChat } from 'ai/react' // ✅ NOT '@ai-sdk/react'
+import { useChat } from 'ai/react'
 import { Message } from 'ai/react'
 import { useEffect } from 'react'
 import { toast } from 'sonner'
 import { ChatMessages } from './chat-messages'
 import { ChatPanel } from './chat-panel'
-import { SearchSection } from './search-section' // ✅ Make sure this path is correct
+import { SearchSection } from './search-section' // ✅ Adjust if path differs
+
+type SearchToolData = {
+  tool: 'search'
+  state: 'result'
+  query?: string
+  results?: any[]
+  images?: any[]
+}
 
 export function Chat({
   id,
@@ -22,35 +30,32 @@ export function Chat({
   models?: Model[]
 }) {
   const {
-  messages,
-  input,
-  handleInputChange,
-  handleSubmit,
-  status,
-  setMessages,
-  stop,
-  append,
-  data,
-  setData,
-  addToolResult
-} = useChat({
-  initialMessages: savedMessages,
-  id: CHAT_ID,
-  body: {
-    id
-  },
-  onFinish: () => {
-    window.history.replaceState({}, '', `/search/${id}`)
-  },
-  onError: error => {
-    toast.error(`Error in chat: ${error.message}`)
-  },
-  sendExtraMessageFields: false,
-  experimental_throttle: 100
-})
-
-// ✅ Log the data AFTER the hook runs
-console.log('🧪 useChat().data:', data)
+    messages,
+    input,
+    handleInputChange,
+    handleSubmit,
+    status,
+    setMessages,
+    stop,
+    append,
+    data,
+    setData,
+    addToolResult
+  } = useChat({
+    initialMessages: savedMessages,
+    id: CHAT_ID,
+    body: {
+      id
+    },
+    onFinish: () => {
+      window.history.replaceState({}, '', `/search/${id}`)
+    },
+    onError: error => {
+      toast.error(`Error in chat: ${error.message}`)
+    },
+    sendExtraMessageFields: false,
+    experimental_throttle: 100
+  })
 
   const isLoading = status === 'submitted' || status === 'streaming'
 
@@ -67,12 +72,21 @@ console.log('🧪 useChat().data:', data)
 
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-   // setData(undefined) // reset data to clear tool call
     handleSubmit(e)
   }
 
-  // ✅ DEBUG LOG
-  console.log('🧪 tool data:', data)
+  // ✅ LOGGING
+  console.log('🧪 useChat().data:', data)
+
+  // ✅ Robust type check
+  const isSearchToolResult =
+    typeof data === 'object' &&
+    data !== null &&
+    !Array.isArray(data) &&
+    'tool' in data &&
+    (data as any).tool === 'search' &&
+    'state' in data &&
+    (data as any).state === 'result'
 
   return (
     <div className="flex flex-col w-full max-w-3xl pt-14 pb-32 mx-auto stretch">
@@ -86,14 +100,9 @@ console.log('🧪 useChat().data:', data)
       />
 
       {/* ✅ Conditionally show search section if tool result is available */}
-     {typeof data === 'object' &&
-  data !== null &&
-  !Array.isArray(data) &&
-  'tool' in data &&
-  data.tool === 'search' &&
-  data.state === 'result' && (
-    <SearchSection tool={data} isOpen={true} onOpenChange={() => {}} />
-)}
+      {isSearchToolResult && (
+        <SearchSection tool={data as SearchToolData} isOpen={true} onOpenChange={() => {}} />
+      )}
 
       <ChatPanel
         input={input}
