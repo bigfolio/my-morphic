@@ -10,8 +10,8 @@ export async function handleStreamFinish({
   skipRelatedQuestions,
   addToolResult
 }: HandleStreamFinishParams) {
-  // Convert the response messages into standard format
-  const finalMessages: Message[] = responseMessages.map(msg => {
+  // Step 1: Convert assistant and user messages to basic format
+  const finalMessages: Message[] = responseMessages.map((msg: any) => {
     const id = 'id' in msg ? msg.id : crypto.randomUUID()
 
     if (msg.role === 'assistant') {
@@ -27,11 +27,16 @@ export async function handleStreamFinish({
       }
     }
 
-    if ((msg as any).role === 'tool') {
+    // Stream tool results into data
+    if (msg.role === 'tool') {
       return {
         id,
         role: 'data',
-        content: JSON.stringify((msg as any).content)
+        content: JSON.stringify({
+          tool: 'search',
+          state: 'result',
+          ...(typeof msg.content === 'object' ? msg.content : {})
+        })
       }
     }
 
@@ -42,25 +47,24 @@ export async function handleStreamFinish({
     }
   })
 
+  // Step 2: Stream all formatted messages back
   for (const message of finalMessages) {
     dataStream.write(message)
   }
 
-  // ✅ Add structured tool result to render search UI
-  const lastToolMsg = responseMessages.find(m => (m as any).role === 'tool')
+  // Step 3: Use addToolResult to populate the `data` field if provided
+  const lastToolMsg = responseMessages.find(m => m.role === 'tool')
 
-if (addToolResult && lastToolMsg) {
-  const toolResult = {
-    tool: 'search',
-    state: 'result',
-    ...(typeof lastToolMsg.content === 'object' ? lastToolMsg.content : {})
+  if (addToolResult && lastToolMsg) {
+    const toolData = {
+      tool: 'search',
+      state: 'result',
+      ...(typeof lastToolMsg.content === 'object' ? lastToolMsg.content : {})
+    }
+
+    console.log('🧪 Sending toolData into addToolResult:', toolData)
+    addToolResult(toolData)
   }
-
-  console.log('🧪 Sending toolResult into addToolResult:', toolResult)
-  addToolResult(toolResult) // ✅ This is how Morphic gets the structured data
-}
-}
-
 
   dataStream.close()
 }
