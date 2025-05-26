@@ -10,16 +10,8 @@ import { SearchResults } from './search-results'
 import { SearchResultsImageSection } from './search-results-image'
 import { Section, ToolArgsSection } from './section'
 
-export interface SearchToolData {
-  tool: 'search'
-  state: 'result'
-  query?: string
-  results?: any[]
-  images?: { url: string; description: string }[]
-}
-
 interface SearchSectionProps {
-  tool: SearchToolData
+  tool: ToolInvocation
   isOpen: boolean
   onOpenChange: (open: boolean) => void
 }
@@ -29,15 +21,8 @@ export function SearchSection({
   isOpen,
   onOpenChange
 }: SearchSectionProps) {
-  const { isLoading } = useChat({
-    id: CHAT_ID
-  })
-  const isToolLoading = tool.state === 'call'
-  const searchResults: TypeSearchResults =
-    tool.state === 'result' ? tool.result : undefined
+  const { isLoading } = useChat({ id: CHAT_ID })
 
-  console.log('🐞 SearchSection received searchResults:', searchResults);
-  
   const query = tool.args?.query as string | undefined
   const includeDomains = tool.args?.includeDomains as string[] | undefined
   const includeDomainsString = includeDomains
@@ -47,22 +32,56 @@ export function SearchSection({
   const header = (
     <ToolArgsSection
       tool="search"
-      number={searchResults?.results?.length}
+      number={tool?.result?.results?.length || 0}
     >{`${query}${includeDomainsString}`}</ToolArgsSection>
   )
 
-  return (
-    <CollapsibleMessage
-      role="assistant"
-      isCollapsible={true}
-      header={header}
-      isOpen={isOpen}
-      onOpenChange={onOpenChange}
-      showIcon={false}
-    >
-      {searchResults &&
-        searchResults.images &&
-        searchResults.images.length > 0 && (
+  // 🔄 Handle different tool states
+  if (tool.state === 'partial-call' || tool.state === 'call') {
+    return (
+      <CollapsibleMessage
+        role="assistant"
+        isCollapsible={true}
+        header={header}
+        isOpen={isOpen}
+        onOpenChange={onOpenChange}
+        showIcon={false}
+      >
+        <SearchSkeleton />
+      </CollapsibleMessage>
+    )
+  }
+
+  if (tool.state === 'error') {
+    return (
+      <CollapsibleMessage
+        role="assistant"
+        isCollapsible={true}
+        header={header}
+        isOpen={isOpen}
+        onOpenChange={onOpenChange}
+        showIcon={false}
+      >
+        <div className="text-red-500 text-sm py-2">
+          Failed to fetch search results. Please try again.
+        </div>
+      </CollapsibleMessage>
+    )
+  }
+
+  if (tool.state === 'result') {
+    const searchResults: TypeSearchResults = tool.result
+
+    return (
+      <CollapsibleMessage
+        role="assistant"
+        isCollapsible={true}
+        header={header}
+        isOpen={isOpen}
+        onOpenChange={onOpenChange}
+        showIcon={false}
+      >
+        {searchResults?.images?.length > 0 && (
           <Section>
             <SearchResultsImageSection
               images={searchResults.images}
@@ -70,13 +89,16 @@ export function SearchSection({
             />
           </Section>
         )}
-      {isLoading && isToolLoading ? (
-        <SearchSkeleton />
-      ) : searchResults?.results ? (
-        <Section title="Sources">
-          <SearchResults results={searchResults.results} />
-        </Section>
-      ) : null}
-    </CollapsibleMessage>
-  )
+
+        {searchResults?.results?.length > 0 && (
+          <Section title="Sources">
+            <SearchResults results={searchResults.results} />
+          </Section>
+        )}
+      </CollapsibleMessage>
+    )
+  }
+
+  // 🔒 If the state is unrecognized, return null
+  return null
 }
