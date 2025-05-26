@@ -51,30 +51,29 @@ export async function handleStreamFinish({
 
 if (addToolResult && lastToolMsg) {
   const toolData = {
-    role: 'data',
-    content: {
-      tool: 'search',
-      state: 'result',
-      ...(typeof lastToolMsg.content === 'object' ? lastToolMsg.content : {})
-    }
-  }
-
-  console.log('🧪 Sending toolData into addToolResult:', toolData)
-
-  // ✅ Send tool data to the React hook context (useChat().data)
-  addToolResult({
-    role: 'data',
-    content: toolData,
-    id: crypto.randomUUID()
-  })
-
-  // ✅ Also write it into the stream for visibility (OPTIONAL but safe)
-  dataStream.write({
-    role: 'data',
-    content: JSON.stringify(toolData),
-    id: crypto.randomUUID()
-  })
+  tool: 'search',
+  state: 'result',
+  ...(typeof lastToolMsg.content === 'object' ? lastToolMsg.content : {})
 }
+
+console.log('🧪 Sending toolData into addToolResult:', toolData)
+addToolResult({
+  role: 'data',
+  content: toolData,
+  id: crypto.randomUUID()
+})
+
+// ✅ Now write it as a string for the stream
+dataStream.write({
+  role: 'data',
+  content: JSON.stringify({
+    tool: 'search',
+    state: 'result',
+    ...toolData
+  }),
+  id: crypto.randomUUID()
+})
+
 
 
   dataStream.close()
