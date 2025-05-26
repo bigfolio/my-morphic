@@ -12,14 +12,6 @@ import { SearchSection } from './search-section' // ✅ Adjust if path differs
 import type { SearchToolData } from './search-section'
 
 
-type SearchToolData = {
-  tool: 'search'
-  state: 'result'
-  query?: string
-  results?: any[]
-  images?: any[]
-}
-
 export function Chat({
   id,
   savedMessages = [],
