@@ -10,6 +10,7 @@ import { ChatMessages } from './chat-messages'
 import { ChatPanel } from './chat-panel'
 import { SearchSection } from './search-section'
 import type { ToolInvocation } from 'ai'
+import type { SearchToolData } from './search-section'
 
 type SearchToolData = ToolInvocation & {
   tool: 'search'
