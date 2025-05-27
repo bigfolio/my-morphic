@@ -8,7 +8,16 @@ import { useEffect } from 'react'
 import { toast } from 'sonner'
 import { ChatMessages } from './chat-messages'
 import { ChatPanel } from './chat-panel'
-import { SearchSection, SearchToolData } from './search-section'
+import { SearchSection } from './search-section'
+
+type SearchToolData = {
+  tool: string
+  state: 'result'
+  query?: string
+  results?: any[]
+  images?: { url: string; description?: string }[]
+}
+
 
 export function Chat({
   id,
@@ -72,12 +81,13 @@ export function Chat({
 
   // ✅ Type guard for SearchToolData
   const isSearchToolResult =
-    typeof data === 'object' &&
-    data !== null &&
-    'tool' in data &&
-    (data as any).tool === 'search' &&
-    'state' in data &&
-    ['result', 'call', 'partial-call'].includes((data as any).state)
+  typeof data === 'object' &&
+  data !== null &&
+  'tool' in data &&
+  (data as any).tool === 'search' &&
+  'state' in data &&
+  (data as any).state === 'result'
+
 
   return (
     <div className="flex flex-col w-full max-w-3xl pt-14 pb-32 mx-auto stretch">
@@ -92,8 +102,13 @@ export function Chat({
 
       {/* ✅ Conditionally show search section if tool result is available */}
       {isSearchToolResult && (
-        <SearchSection tool={data as SearchToolData} isOpen={true} onOpenChange={() => {}} />
-      )}
+  <SearchSection
+    tool={data as SearchToolData}
+    isOpen={true}
+    onOpenChange={() => {}}
+  />
+)}
+
 
       <ChatPanel
         input={input}
