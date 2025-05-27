@@ -107,10 +107,10 @@ export function Chat({
       {/* ✅ Conditionally show search section if tool result is available */}
       {isSearchToolResult && (
   <SearchSection
-    tool={data as SearchToolData}
-    isOpen={true}
-    onOpenChange={() => {}}
-  />
+  tool={data as unknown as SearchToolData}
+  isOpen={true}
+  onOpenChange={() => {}}
+/>
 )}
 
 
