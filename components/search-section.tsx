@@ -11,7 +11,7 @@ import { SearchResultsImageSection } from './search-results-image'
 import { Section, ToolArgsSection } from './section'
 
 interface SearchSectionProps {
-  tool: ToolInvocation
+  tool: SearchToolData
   isOpen: boolean
   onOpenChange: (open: boolean) => void
 }

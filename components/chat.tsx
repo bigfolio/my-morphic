@@ -9,14 +9,18 @@ import { toast } from 'sonner'
 import { ChatMessages } from './chat-messages'
 import { ChatPanel } from './chat-panel'
 import { SearchSection } from './search-section'
+import type { ToolInvocation } from 'ai'
 
-type SearchToolData = {
-  tool: string
+type SearchToolData = ToolInvocation & {
+  tool: 'search'
   state: 'result'
-  query?: string
-  results?: any[]
-  images?: { url: string; description?: string }[]
+  result: {
+    query?: string
+    results?: any[]
+    images?: { url: string; description?: string }[]
+  }
 }
+
 
 
 export function Chat({
@@ -108,6 +112,7 @@ export function Chat({
     onOpenChange={() => {}}
   />
 )}
+
 
 
       <ChatPanel
