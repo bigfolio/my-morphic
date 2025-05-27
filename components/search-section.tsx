@@ -10,6 +10,19 @@ import { SearchResults } from './search-results'
 import { SearchResultsImageSection } from './search-results-image'
 import { Section, ToolArgsSection } from './section'
 
+type SearchToolData = ToolInvocation & {
+  tool: 'search'
+  state: 'result'
+  result: {
+    query?: string
+    results?: any[]
+    images?: {
+      url: string
+      description: string
+    }[]
+  }
+}
+
 interface SearchSectionProps {
   tool: SearchToolData
   isOpen: boolean
