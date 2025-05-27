@@ -10,9 +10,9 @@ import { SearchResults } from './search-results'
 import { SearchResultsImageSection } from './search-results-image'
 import { Section, ToolArgsSection } from './section'
 
-type SearchToolData = ToolInvocation & {
-  tool: 'search'
-  state: 'result' | 'call' | 'partial-call'
+export type SearchToolData = ToolInvocation & {
+  tool: 'search' // ✅ This must match where it's being passed
+  state: 'call' | 'partial-call' | 'result'
   result?: {
     query?: string
     results?: any[]
