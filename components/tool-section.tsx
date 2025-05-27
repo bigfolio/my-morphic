@@ -1,6 +1,4 @@
-'use client'
-
-import { ToolInvocation } from 'ai'
+import type { ToolInvocation } from 'ai'
 import { QuestionConfirmation } from './question-confirmation'
 import RetrieveSection from './retrieve-section'
 import { SearchSection } from './search-section'
@@ -13,15 +11,24 @@ interface ToolSectionProps {
   addToolResult?: (params: { toolCallId: string; result: any }) => void
 }
 
+// Optional: define a safe type for SearchToolData
+type SearchToolData = ToolInvocation & {
+  toolName: 'search'
+  state: 'call' | 'partial-call' | 'result'
+  result?: {
+    query?: string
+    results?: any[]
+    images?: { url: string; description: string }[]
+  }
+}
+
 export function ToolSection({
   tool,
   isOpen,
   onOpenChange,
   addToolResult
 }: ToolSectionProps) {
-  // Special handling for ask_question tool
   if (tool.toolName === 'ask_question') {
-    // When waiting for user input
     if (tool.state === 'call' && addToolResult) {
       return (
         <QuestionConfirmation
@@ -42,44 +49,47 @@ export function ToolSection({
       )
     }
 
-    // When result is available, display the result
     if (tool.state === 'result') {
       return (
         <QuestionConfirmation
           toolInvocation={tool}
           isCompleted={true}
-          onConfirm={() => {}} // Not used in result display mode
+          onConfirm={() => {}}
         />
       )
     }
   }
 
-  switch (tool.toolName) {
-    case 'search':
-      return (
-        <SearchSection
-          tool={tool}
-          isOpen={isOpen}
-          onOpenChange={onOpenChange}
-        />
-      )
-    case 'video_search':
-      return (
-        <VideoSearchSection
-          tool={tool}
-          isOpen={isOpen}
-          onOpenChange={onOpenChange}
-        />
-      )
-    case 'retrieve':
-      return (
-        <RetrieveSection
-          tool={tool}
-          isOpen={isOpen}
-          onOpenChange={onOpenChange}
-        />
-      )
-    default:
-      return null
+  // ✅ Check before asserting tool as SearchToolData
+  if (tool.toolName === 'search') {
+    return (
+      <SearchSection
+        tool={tool as SearchToolData}
+        isOpen={isOpen}
+        onOpenChange={onOpenChange}
+      />
+    )
   }
+
+  if (tool.toolName === 'video_search') {
+    return (
+      <VideoSearchSection
+        tool={tool}
+        isOpen={isOpen}
+        onOpenChange={onOpenChange}
+      />
+    )
+  }
+
+  if (tool.toolName === 'retrieve') {
+    return (
+      <RetrieveSection
+        tool={tool}
+        isOpen={isOpen}
+        onOpenChange={onOpenChange}
+      />
+    )
+  }
+
+  return null
 }
