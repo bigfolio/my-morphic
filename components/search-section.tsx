@@ -10,21 +10,8 @@ import { SearchResults } from './search-results'
 import { SearchResultsImageSection } from './search-results-image'
 import { Section, ToolArgsSection } from './section'
 
-export type SearchToolData =
-  | {
-      tool: 'search'
-      state: 'call' | 'partial-call'
-    }
-  | {
-      tool: 'search'
-      state: 'result'
-      query: string
-      results: Array<{ title: string; url: string; content: string }>
-      images?: Array<{ url: string; description?: string }>
-    }
-
 interface SearchSectionProps {
-  tool: SearchToolData
+  tool: ToolInvocation
   isOpen: boolean
   onOpenChange: (open: boolean) => void
 }
@@ -34,42 +21,41 @@ export function SearchSection({
   isOpen,
   onOpenChange
 }: SearchSectionProps) {
-  const { isLoading } = useChat({
-    id: CHAT_ID
-  })
+  const { isLoading } = useChat({ id: CHAT_ID })
 
-  // 🔄 Handle loading or intermediate tool call states
-  if (tool.state === 'partial-call' || tool.state === 'call') {
-    return (
-  <CollapsibleMessage
-    role="assistant"
-    isCollapsible={true}
-    isOpen={isOpen}
-    onOpenChange={onOpenChange}
-    showIcon={false}
-    header={
-      <ToolArgsSection tool="search">
-        {query || 'Searching...'}
-      </ToolArgsSection>
-    }
-  >
-    <SearchSkeleton />
-  </CollapsibleMessage>
-)
-  }
+  // ✅ Declare values early to avoid reference errors
+  const query = tool.args?.query as string | undefined
+  const includeDomains = tool.args?.includeDomains as string[] | undefined
+  const includeDomainsString = includeDomains
+    ? ` [${includeDomains.join(', ')}]`
+    : ''
 
-  // ✅ Extract values from final result
-  const query = tool.query
-  const results = tool.results
-  const images = tool.images || []
+  const isToolLoading = tool.state === 'call' || tool.state === 'partial-call'
+  const searchResults: TypeSearchResults =
+    tool.state === 'result' ? tool.result : undefined
 
-  const includeDomainsString = '' // placeholder if you plan to add domains later
-
+  // Header to show query string and domains
   const header = (
-    <ToolArgsSection tool="search" number={results?.length}>
-      {`${query}${includeDomainsString}`}
+    <ToolArgsSection tool="search" number={searchResults?.results?.length}>
+      {query || 'Searching...'}
+      {includeDomainsString}
     </ToolArgsSection>
   )
+
+  if (isToolLoading) {
+    return (
+      <CollapsibleMessage
+        role="assistant"
+        isCollapsible={true}
+        isOpen={isOpen}
+        onOpenChange={onOpenChange}
+        showIcon={false}
+        header={header}
+      >
+        <SearchSkeleton />
+      </CollapsibleMessage>
+    )
+  }
 
   return (
     <CollapsibleMessage
@@ -80,16 +66,19 @@ export function SearchSection({
       onOpenChange={onOpenChange}
       showIcon={false}
     >
-      {images.length > 0 && (
+      {/* Images section */}
+      {searchResults?.images?.length > 0 && (
         <Section>
-          <SearchResultsImageSection images={images} query={query} />
+          <SearchResultsImageSection images={searchResults.images} query={query} />
         </Section>
       )}
-      {results?.length > 0 ? (
+
+      {/* Text results */}
+      {searchResults?.results?.length > 0 && (
         <Section title="Sources">
-          <SearchResults results={results} />
+          <SearchResults results={searchResults.results} />
         </Section>
-      ) : null}
+      )}
     </CollapsibleMessage>
   )
 }
