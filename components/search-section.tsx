@@ -12,8 +12,8 @@ import { Section, ToolArgsSection } from './section'
 
 type SearchToolData = ToolInvocation & {
   tool: 'search'
-  state: 'result'
-  result: {
+  state: 'result' | 'call' | 'partial-call'
+  result?: {
     query?: string
     results?: any[]
     images?: {
@@ -22,6 +22,7 @@ type SearchToolData = ToolInvocation & {
     }[]
   }
 }
+
 
 interface SearchSectionProps {
   tool: SearchToolData
