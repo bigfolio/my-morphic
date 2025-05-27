@@ -41,17 +41,21 @@ export function SearchSection({
   // 🔄 Handle loading or intermediate tool call states
   if (tool.state === 'partial-call' || tool.state === 'call') {
     return (
-      <CollapsibleMessage
-        role="assistant"
-        isCollapsible
-        isOpen={isOpen}
-        onOpenChange={onOpenChange}
-        showIcon={false}
-        header={<ToolArgsSection tool="search" />}
-      >
-        <SearchSkeleton />
-      </CollapsibleMessage>
-    )
+  <CollapsibleMessage
+    role="assistant"
+    isCollapsible={true}
+    isOpen={isOpen}
+    onOpenChange={onOpenChange}
+    showIcon={false}
+    header={
+      <ToolArgsSection tool="search">
+        {query || 'Searching...'}
+      </ToolArgsSection>
+    }
+  >
+    <SearchSkeleton />
+  </CollapsibleMessage>
+)
   }
 
   // ✅ Extract values from final result
