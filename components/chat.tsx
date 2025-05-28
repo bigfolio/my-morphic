@@ -14,7 +14,7 @@ import type { ToolInvocation } from 'ai'
 type SearchToolData = ToolInvocation & {
   tool: 'search'
   state: 'result'
-  result: {
+  result?: {
     query?: string
     results?: any[]
     images?: {
@@ -23,8 +23,6 @@ type SearchToolData = ToolInvocation & {
     }[]
   }
 }
-
-
 
 export function Chat({
   id,
@@ -80,21 +78,20 @@ export function Chat({
 
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    setData(undefined) // reset data to clear tool call
+    setData(undefined)
     handleSubmit(e)
   }
 
   console.log('🧪 useChat().data:', data)
 
-  // ✅ Type guard for SearchToolData
   const isSearchToolResult =
-  typeof data === 'object' &&
-  data !== null &&
-  'tool' in data &&
-  (data as any).tool === 'search' &&
-  'state' in data &&
-  (data as any).state === 'result'
-
+    typeof data === 'object' &&
+    data !== null &&
+    !Array.isArray(data) &&
+    'tool' in data &&
+    (data as any).tool === 'search' &&
+    'state' in data &&
+    (data as any).state === 'result'
 
   return (
     <div className="flex flex-col w-full max-w-3xl pt-14 pb-32 mx-auto stretch">
@@ -109,14 +106,12 @@ export function Chat({
 
       {/* ✅ Conditionally show search section if tool result is available */}
       {isSearchToolResult && (
-  <SearchSection
-  tool={data as unknown as SearchToolData}
-  isOpen={true}
-  onOpenChange={() => {}}
-/>
-)}
-
-
+        <SearchSection
+          tool={data as SearchToolData}
+          isOpen={true}
+          onOpenChange={() => {}}
+        />
+      )}
 
       <ChatPanel
         input={input}
