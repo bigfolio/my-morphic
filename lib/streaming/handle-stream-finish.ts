@@ -64,21 +64,29 @@ export async function handleStreamFinish({
 )
 
 
-  if (addToolResult && lastToolMsg) {
+if (addToolResult && lastToolMsg) {
   const toolData = {
-    role: 'data',
-    content: {
-      tool: 'search',
-      state: 'result',
-      ...(typeof lastToolMsg.content === 'object' ? lastToolMsg.content : {})
-    }
+    tool: 'search',
+    state: 'result',
+    ...(typeof lastToolMsg.content === 'object' ? lastToolMsg.content : {})
   }
 
   console.log('🧪 Sending toolData into addToolResult:', toolData)
 
-  addToolResult(toolData)
-  dataStream.write(toolData)
+  addToolResult({
+    role: 'data',
+    content: toolData,
+    id: crypto.randomUUID()
+  })
+
+  // ✅ Write it to the stream as a string!
+  dataStream.write({
+    role: 'data',
+    content: JSON.stringify(toolData),
+    id: crypto.randomUUID()
+  })
 }
+
 
 
   dataStream.close()
