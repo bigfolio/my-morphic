@@ -70,11 +70,11 @@ export function createToolCallingStreamResponse(
                 const result = streamText({
           ...researcherConfig,
           onFinish: async result => {
-            const shouldSkipRelatedQuestions =
-              isReasoningModel(modelId) ||
-              (result.response.messages.length > 0 &&
-                result.response.messages[result.response.messages.length - 1].toolName ===
-                  'ask_question')
+            const lastMessage = result.response.messages[result.response.messages.length - 1]
+			const shouldSkipRelatedQuestions =
+				isReasoningModel(modelId) ||
+				('toolName' in lastMessage && lastMessage.toolName === 'ask_question')
+
 
             const plainMessages = result.response.messages.map((msg: any) => {
               const id = msg.id || crypto.randomUUID()
