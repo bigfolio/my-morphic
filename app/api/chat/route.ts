@@ -77,16 +77,15 @@ export async function POST(req: Request) {
     return createDataStreamResponse({
   execute: async (dataStream) => {
     const handler = supportsToolCalling
-      ? createToolCallingStreamResponse
-      : createManualToolStreamResponse
+  ? createToolCallingStreamResponse
+  : createManualToolStreamResponse
 
-    await handler({
-      messages,
-      model: selectedModel,
-      chatId,
-      searchMode,
-      dataStream
-    })
+return await handler({
+  messages,
+  model: selectedModel,
+  chatId,
+  searchMode
+})
   },
   onError: (err) => `Stream error: ${String(err)}`
 })
