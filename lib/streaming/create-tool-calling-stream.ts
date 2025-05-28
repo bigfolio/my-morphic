@@ -123,6 +123,7 @@ export function createToolCallingStreamResponse(
 })
 
 
+
         result.mergeIntoDataStream(dataStream)
       } catch (error) {
         console.error('Stream execution error:', error)
