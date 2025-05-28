@@ -43,7 +43,7 @@ export async function handleStreamFinish({
   })
 
   // ✅ Write messages (excluding tool result formatting)
-  for (const message of finalMessages.filter(m => m.role !== 'tool')) {
+for (const message of finalMessages) {
   dataStream.write(message)
 }
 
