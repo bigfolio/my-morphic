@@ -75,7 +75,7 @@ export async function POST(req: Request) {
     console.log('🧠 Final messages payload:', JSON.stringify(messages, null, 2))
 
     return createDataStreamResponse({
-  async *stream(dataStream) {
+  execute: async (dataStream) => {
     const handler = supportsToolCalling
       ? createToolCallingStreamResponse
       : createManualToolStreamResponse
@@ -85,17 +85,12 @@ export async function POST(req: Request) {
       model: selectedModel,
       chatId,
       searchMode,
-      addToolResult: (toolData) => {
-        dataStream.write({
-          id: crypto.randomUUID(),
-          role: 'data',
-          content: JSON.stringify(toolData),
-        })
-      },
-      dataStream,
+      dataStream
     })
   },
+  onError: (err) => `Stream error: ${String(err)}`
 })
+
   } catch (error) {
     console.error('❌ API error:', error)
     return new Response('Error processing your request', {
