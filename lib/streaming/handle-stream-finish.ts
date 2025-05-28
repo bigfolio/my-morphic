@@ -15,17 +15,18 @@ export async function handleStreamFinish({
     const id = 'id' in msg ? msg.id : crypto.randomUUID()
 
     if (msg.role === 'assistant') {
-      return {
-        id,
-        role: 'assistant',
-        content: Array.isArray(msg.content)
-          ? msg.content
-              .filter((c: any): c is { type: 'text'; text: string } => c.type === 'text')
-              .map(c => c.text)
-              .join('')
-          : msg.content
-      }
-    }
+  return {
+    id,
+    role: 'assistant',
+    content: Array.isArray(msg.content)
+      ? msg.content
+          .filter((c: any): c is { type: 'text'; text: string } => c.type === 'text')
+          .map((c: { type: 'text'; text: string }) => c.text)
+          .join('')
+      : msg.content
+  }
+}
+
 
     // Stream tool results into data
     if (msg.role === 'tool') {
