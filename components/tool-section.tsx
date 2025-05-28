@@ -1,26 +1,16 @@
+'use client'
+
 import type { ToolInvocation } from 'ai'
 import { QuestionConfirmation } from './question-confirmation'
 import RetrieveSection from './retrieve-section'
 import { VideoSearchSection } from './video-search-section'
-import { SearchSection, SearchToolData } from './search-section'
-
+import { SearchSection, SearchToolData } from './search-section' // ✅ Only one source
 
 interface ToolSectionProps {
   tool: ToolInvocation
   isOpen: boolean
   onOpenChange: (open: boolean) => void
   addToolResult?: (params: { toolCallId: string; result: any }) => void
-}
-
-// Optional: define a safe type for SearchToolData
-type SearchToolData = ToolInvocation & {
-  toolName: 'search'
-  state: 'call' | 'partial-call' | 'result'
-  result?: {
-    query?: string
-    results?: any[]
-    images?: { url: string; description: string }[]
-  }
 }
 
 export function ToolSection({
@@ -61,7 +51,6 @@ export function ToolSection({
     }
   }
 
-  // ✅ Check before asserting tool as SearchToolData
   if (tool.toolName === 'search') {
     return (
       <SearchSection
