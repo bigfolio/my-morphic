@@ -1,5 +1,6 @@
 import { Message } from 'ai'
 import { Model } from '../types/models'
+import { DataStreamWriter } from 'ai'
 
 export interface BaseStreamConfig {
   messages: Message[]
@@ -7,6 +8,7 @@ export interface BaseStreamConfig {
   chatId: string
   searchMode: boolean
   addToolResult?: (result: any) => void
+  dataStream?: DataStreamWriter // ✅ ADD THIS LINE
 }
 
 export interface HandleStreamFinishParams {
