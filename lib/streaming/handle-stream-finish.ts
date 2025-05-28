@@ -44,6 +44,7 @@ export async function handleStreamFinish({
 
   // ✅ Write messages (excluding tool result formatting)
 for (const message of finalMessages) {
+  console.log('📤 Writing to stream:', message)
   dataStream.write(message)
 }
 
