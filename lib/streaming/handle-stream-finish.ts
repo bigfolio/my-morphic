@@ -26,15 +26,12 @@ export async function handleStreamFinish({
       }
     }
 
+    // ✅ Do NOT stringify tool message content here — we’ll handle it cleanly below
     if (msg.role === 'tool') {
       return {
         id,
-        role: 'data',
-        content: JSON.stringify({
-          tool: 'search',
-          state: 'result',
-          ...(typeof msg.content === 'object' ? msg.content : {})
-        })
+        role: 'tool',
+        content: msg.content
       }
     }
 
@@ -45,10 +42,14 @@ export async function handleStreamFinish({
     }
   })
 
+  // ✅ Write messages (excluding tool result formatting)
   for (const message of finalMessages) {
-    dataStream.write(message)
+    if (message.role !== 'tool') {
+      dataStream.write(message)
+    }
   }
 
+  // ✅ Pull tool result and format it *once*
   const lastToolMsg = responseMessages.find(
     (m: any) =>
       m.role === 'tool' &&
@@ -59,22 +60,23 @@ export async function handleStreamFinish({
   )
 
   if (addToolResult && lastToolMsg) {
-    const toolData = {
-      role: 'data',
-      content: {
-        tool: 'search',
-        state: 'result',
-        ...(typeof lastToolMsg.content === 'object' ? lastToolMsg.content : {})
-      }
+    const toolResultContent = {
+      tool: 'search',
+      state: 'result',
+      ...(typeof lastToolMsg.content === 'object' ? lastToolMsg.content : {})
     }
 
-    console.log('🧪 Sending toolData into addToolResult:', toolData)
+    console.log('🧪 Sending toolData into addToolResult:', toolResultContent)
 
-    addToolResult(toolData)
+    addToolResult({
+      role: 'data',
+      content: toolResultContent
+    })
+
     dataStream.write({
       id: crypto.randomUUID(),
       role: 'data',
-      content: JSON.stringify(toolData.content)
+      content: JSON.stringify(toolResultContent)
     })
   }
 
