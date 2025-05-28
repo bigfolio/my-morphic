@@ -3,8 +3,8 @@ import { Model } from '../types/models'
 import { DataStreamWriter } from 'ai'
 
 export interface BaseStreamConfig {
-  messages: Message[]
-  model: Model
+  messages: any[]
+  model: any
   chatId: string
   searchMode: boolean
   addToolResult?: (result: any) => void
