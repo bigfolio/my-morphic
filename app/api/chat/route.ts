@@ -1,3 +1,6 @@
+export const runtime = 'edge' // ✅ Add this line at the very top
+
+import { createDataStreamResponse } from 'ai' // ⬅️ Make sure this import is at the top
 import { createManualToolStreamResponse } from '@/lib/streaming/create-manual-tool-stream'
 import { createToolCallingStreamResponse } from '@/lib/streaming/create-tool-calling-stream'
 import { Model } from '@/lib/types/models'
@@ -71,19 +74,28 @@ export async function POST(req: Request) {
 
     console.log('🧠 Final messages payload:', JSON.stringify(messages, null, 2))
 
-    return supportsToolCalling
-      ? createToolCallingStreamResponse({
-          messages,
-          model: selectedModel,
-          chatId,
-          searchMode
+    return createDataStreamResponse({
+  async *stream(dataStream) {
+    const handler = supportsToolCalling
+      ? createToolCallingStreamResponse
+      : createManualToolStreamResponse
+
+    await handler({
+      messages,
+      model: selectedModel,
+      chatId,
+      searchMode,
+      addToolResult: (toolData) => {
+        dataStream.write({
+          id: crypto.randomUUID(),
+          role: 'data',
+          content: JSON.stringify(toolData),
         })
-      : createManualToolStreamResponse({
-          messages,
-          model: selectedModel,
-          chatId,
-          searchMode
-        })
+      },
+      dataStream,
+    })
+  },
+})
   } catch (error) {
     console.error('❌ API error:', error)
     return new Response('Error processing your request', {

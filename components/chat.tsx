@@ -83,6 +83,17 @@ export function Chat({
   }
 
   console.log('🧪 useChat().data:', data)
+  
+  useEffect(() => {
+  if (data && typeof data === 'string') {
+    try {
+      const parsed = JSON.parse(data)
+      console.log('✅ Parsed tool data:', parsed)
+    } catch (e) {
+      console.error('❌ Failed to parse tool data:', e)
+    }
+  }
+}, [data])
 
   const isSearchToolResult =
     typeof data === 'object' &&
