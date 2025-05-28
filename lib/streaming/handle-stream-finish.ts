@@ -54,18 +54,32 @@ export async function handleStreamFinish({
   }
 
   // Step 3: Use addToolResult to populate the `data` field if provided
-  const lastToolMsg = responseMessages.find(m => m.role === 'tool')
+  const lastToolMsg = responseMessages.find(
+  (m) =>
+    m.role === 'data' &&
+    typeof m.content === 'object' &&
+    m.content !== null &&
+    'tool' in m.content &&
+    (m.content as any).tool === 'search'
+)
+
 
   if (addToolResult && lastToolMsg) {
-    const toolData = {
+  const toolData = {
+    role: 'data',
+    content: {
       tool: 'search',
       state: 'result',
       ...(typeof lastToolMsg.content === 'object' ? lastToolMsg.content : {})
     }
-
-    console.log('🧪 Sending toolData into addToolResult:', toolData)
-    addToolResult(toolData)
   }
+
+  console.log('🧪 Sending toolData into addToolResult:', toolData)
+
+  addToolResult(toolData)
+  dataStream.write(toolData)
+}
+
 
   dataStream.close()
 }
