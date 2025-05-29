@@ -58,6 +58,8 @@ for (const message of finalMessages) {
       'tool' in m.content &&
       m.content.tool === 'search'
   )
+  
+  console.log('🧪 lastToolMsg:', lastToolMsg)
 
   if (addToolResult && lastToolMsg) {
   const toolData = {
