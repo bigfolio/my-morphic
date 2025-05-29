@@ -80,48 +80,16 @@ export function createToolCallingStreamResponse(
                 ))
 
             await handleStreamFinish({
-  responseMessages: result.response.messages.map((msg: any) => {
-    const id = msg.id || crypto.randomUUID()
-
-    if (msg.role === 'assistant') {
-      return {
-        id,
-        role: 'assistant',
-        content: Array.isArray(msg.content)
-          ? msg.content
-              .filter((c: any) => c.type === 'text')
-              .map((c: any) => c.text)
-              .join('')
-          : msg.content
-      }
-    }
-
-    if (msg.role === 'tool') {
-      return {
-        id,
-        role: 'data',
-        content: JSON.stringify({
-          tool: 'search',
-          state: 'result',
-          ...(typeof msg.content === 'object' ? msg.content : {})
+              responseMessages: result.response.messages,
+              originalMessages: messages,
+              model: modelId,
+              chatId,
+              dataStream,
+              skipRelatedQuestions: shouldSkipRelatedQuestions,
+              addToolResult
+            })
+          }
         })
-      }
-    }
-
-    return {
-      id,
-      role: msg.role,
-      content: typeof msg.content === 'string' ? msg.content : ''
-    }
-  }),
-  originalMessages: messages,
-  model: modelId,
-  chatId,
-  dataStream,
-  skipRelatedQuestions: shouldSkipRelatedQuestions,
-  addToolResult: config.addToolResult
-})
-
 
         result.mergeIntoDataStream(dataStream)
       } catch (error) {
