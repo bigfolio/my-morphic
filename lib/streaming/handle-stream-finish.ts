@@ -2,6 +2,7 @@ import { DataStreamWriter, Message } from 'ai'
 import { HandleStreamFinishParams } from './types'
 
 export async function handleStreamFinish({
+  console.log('🚀 handleStreamFinish() was called')
   responseMessages,
   originalMessages,
   model,
