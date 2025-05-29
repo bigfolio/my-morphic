@@ -59,25 +59,26 @@ for (const message of finalMessages) {
   )
 
   if (addToolResult && lastToolMsg) {
-    const toolResultContent = {
+  const toolData = {
+    role: 'data',
+    content: {
       tool: 'search',
       state: 'result',
       ...(typeof lastToolMsg.content === 'object' ? lastToolMsg.content : {})
     }
-
-    console.log('🧪 Sending toolData into addToolResult:', toolResultContent)
-
-    addToolResult({
-      role: 'data',
-      content: toolResultContent
-    })
-
-    dataStream.write({
-      id: crypto.randomUUID(),
-      role: 'data',
-      content: JSON.stringify(toolResultContent)
-    })
   }
+
+  console.log('🧪 Sending toolData into addToolResult:', toolData)
+
+  addToolResult(toolData)
+
+  dataStream.write({
+    id: crypto.randomUUID(),
+    role: 'data',
+    content: JSON.stringify(toolData.content) // ✅ this must be a string
+  })
+}
+
 
   dataStream.close()
 }
