@@ -1,4 +1,3 @@
-
 import { researcher } from '@/lib/agents/researcher'
 import {
   convertToCoreMessages,
@@ -10,7 +9,7 @@ import {
 import { getMaxAllowedTokens, truncateMessages } from '../utils/context-window'
 import { isReasoningModel } from '../utils/registry'
 import { handleStreamFinish } from './handle-stream-finish'
-import { BaseStreamConfig } from './types'
+import { BaseStreamConfig, HandleStreamFinishParams } from './types'
 
 // ✅ Import search tool for debug testing
 import { searchTool } from '@/lib/tools/search'
@@ -79,15 +78,40 @@ export function createToolCallingStreamResponse(
                   ] as CoreMessage
                 ))
 
-            await handleStreamFinish({
-              responseMessages: result.response.messages,
-              originalMessages: messages,
-              model: modelId,
-              chatId,
-              dataStream,
-              skipRelatedQuestions: shouldSkipRelatedQuestions,
-              addToolResult
-            })
+const plainMessages = result.response.messages.map((msg: any) => {
+  const id = 'id' in msg ? msg.id : crypto.randomUUID()
+
+  if (msg.role === 'assistant' || msg.role === 'tool') {
+    return {
+      id,
+      role: msg.role === 'tool' ? 'data' : 'assistant',
+      content: Array.isArray(msg.content)
+        ? msg.content
+            .filter((c: any) => c.type === 'text')
+            .map((c: any) => c.text)
+            .join('')
+        : msg.content
+    }
+  }
+
+  return {
+    id,
+    role: msg.role,
+    content: typeof msg.content === 'string' ? msg.content : ''
+  }
+})
+
+
+await handleStreamFinish({
+  responseMessages: plainMessages,
+  originalMessages: messages,
+  model: modelId,
+  chatId,
+  dataStream,
+  skipRelatedQuestions: shouldSkipRelatedQuestions,
+  addToolResult: config.addToolResult // ✅ explicitly pass it from config
+})
+
           }
         })
 
