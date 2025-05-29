@@ -71,6 +71,12 @@ for (const message of finalMessages) {
   console.log('🧪 Sending toolData into addToolResult:', toolData)
 
   addToolResult(toolData)
+  
+  console.log('🧪 Writing to stream:', {
+  id: 'generated-id',
+  role: 'data',
+  content: JSON.stringify(toolData.content)
+})
 
   dataStream.write({
     id: crypto.randomUUID(),
