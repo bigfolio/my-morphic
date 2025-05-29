@@ -2,7 +2,6 @@ import { DataStreamWriter, Message } from 'ai'
 import { HandleStreamFinishParams } from './types'
 
 export async function handleStreamFinish({
-  console.log('🚀 handleStreamFinish() was called')
   responseMessages,
   originalMessages,
   model,
@@ -11,6 +10,7 @@ export async function handleStreamFinish({
   skipRelatedQuestions,
   addToolResult
 }: HandleStreamFinishParams) {
+	console.log('🚀 handleStreamFinish() was called')
   const finalMessages: Message[] = responseMessages.map((msg: any) => {
     const id = 'id' in msg ? msg.id : crypto.randomUUID()
 
