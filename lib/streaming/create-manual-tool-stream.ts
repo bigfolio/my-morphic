@@ -19,7 +19,7 @@ function containsAskQuestionTool(message: CoreMessage) {
   )
 }
 
-export function createToolCallingStreamResponse(
+export function createManualToolStreamResponse(
   config: BaseStreamConfig & { addToolResult?: (result: any) => void }
 ) {
   return createDataStreamResponse({
@@ -27,95 +27,65 @@ export function createToolCallingStreamResponse(
       const { messages, model, chatId, searchMode, addToolResult } = config
       const modelId = `${model.providerId}:${model.id}`
 
-      try {
-        const coreMessages = convertToCoreMessages(messages)
-        const truncatedMessages = truncateMessages(
-          coreMessages,
+      const researcherConfig = await researcher({
+        messages: truncateMessages(
+          convertToCoreMessages(messages),
           getMaxAllowedTokens(model)
-        )
+        ),
+        model: modelId,
+        searchMode
+      })
 
-        const researcherConfig = await researcher({
-          messages: truncatedMessages,
-          model: modelId,
-          searchMode
-        })
+      const result = streamText({
+        ...researcherConfig,
+        onFinish: async (result) => {
+          const shouldSkipRelatedQuestions =
+            isReasoningModel(modelId) ||
+            (result.response.messages.length > 0 &&
+              containsAskQuestionTool(
+                result.response.messages[
+                  result.response.messages.length - 1
+                ] as CoreMessage
+              ))
 
-        // DEBUG ONLY (optional)
-        /*
-        try {
-          const debugResult = await searchTool.execute(
-            {
-              query: 'cats',
-              max_results: 5,
-              search_depth: 'basic',
-              include_domains: [],
-              exclude_domains: []
-            },
-            {
-              toolCallId: 'debug-test',
-              messages: []
-            }
-          )
-          console.log('🧪 Manual search result:', JSON.stringify(debugResult, null, 2))
-        } catch (manualError) {
-          console.error('❌ Manual searchTool.execute() failed:', manualError)
-        }
-        */
+          const plainMessages = result.response.messages.map((msg: any) => {
+            const id = 'id' in msg ? msg.id : crypto.randomUUID()
 
-        const result = streamText({
-          ...researcherConfig,
-          onFinish: async result => {
-            const shouldSkipRelatedQuestions =
-              isReasoningModel(modelId) ||
-              (result.response.messages.length > 0 &&
-                containsAskQuestionTool(
-                  result.response.messages[
-                    result.response.messages.length - 1
-                  ] as CoreMessage
-                ))
-
-            const plainMessages = result.response.messages.map((msg: any) => {
-              const id = 'id' in msg ? msg.id : crypto.randomUUID()
-
-              if (msg.role === 'assistant' || msg.role === 'tool') {
-                return {
-                  id,
-                  role: msg.role === 'tool' ? 'data' : 'assistant',
-                  content: Array.isArray(msg.content)
-                    ? msg.content
-                        .filter((c: any) => c.type === 'text')
-                        .map((c: any) => c.text)
-                        .join('')
-                    : msg.content
-                }
-              }
-
+            if (msg.role === 'assistant' || msg.role === 'tool') {
               return {
                 id,
-                role: msg.role,
-                content: typeof msg.content === 'string' ? msg.content : ''
+                role: msg.role === 'tool' ? 'data' : 'assistant',
+                content: Array.isArray(msg.content)
+                  ? msg.content
+                      .filter((c: any) => c.type === 'text')
+                      .map((c: any) => c.text)
+                      .join('')
+                  : msg.content
               }
-            })
+            }
 
-            await handleStreamFinish({
-              responseMessages: plainMessages,
-              originalMessages: messages,
-              model, // ✅ Must be full model object
-              chatId,
-              dataStream,
-              skipRelatedQuestions: shouldSkipRelatedQuestions,
-              addToolResult
-            })
-          }
-        })
+            return {
+              id,
+              role: msg.role,
+              content: typeof msg.content === 'string' ? msg.content : ''
+            }
+          })
 
-        result.mergeIntoDataStream(dataStream)
-      } catch (error) {
-        console.error('❌ Stream execution error:', error)
-        throw error
-      }
+          await handleStreamFinish({
+            responseMessages: plainMessages,
+            originalMessages: messages,
+            model,
+            chatId,
+            dataStream,
+            skipRelatedQuestions: shouldSkipRelatedQuestions,
+            addToolResult
+          })
+        }
+      })
+
+      result.mergeIntoDataStream(dataStream)
     },
-    onError: error =>
-      error instanceof Error ? error.message : String(error)
+    onError: (err) =>
+      err instanceof Error ? err.message : String(err)
   })
 }
