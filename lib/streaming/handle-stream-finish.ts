@@ -1,5 +1,12 @@
-import { DataStreamWriter, Message } from 'ai'
-import { HandleStreamFinishParams } from './types'
+import { Message } from 'ai'
+import { DataStreamWriter } from 'ai'
+import { BaseStreamConfig } from './types'
+
+export type HandleStreamFinishParams = BaseStreamConfig & {
+  responseMessages: Message[]
+  addToolResult?: (result: any) => void
+  dataStream: DataStreamWriter
+}
 
 export async function handleStreamFinish({
   responseMessages,
@@ -7,87 +14,39 @@ export async function handleStreamFinish({
   model,
   chatId,
   dataStream,
-  skipRelatedQuestions,
   addToolResult
 }: HandleStreamFinishParams) {
-	console.log('🚀 handleStreamFinish() was called')
-  const finalMessages: Message[] = responseMessages.map((msg: any) => {
-    const id = 'id' in msg ? msg.id : crypto.randomUUID()
+  console.log('🚀 handleStreamFinish() was called')
 
-    if (msg.role === 'assistant') {
-      return {
-        id,
-        role: 'assistant',
-        content: Array.isArray(msg.content)
-          ? msg.content
-              .filter((c: any): c is { type: 'text'; text: string } => c.type === 'text')
-              .map((c: { text: string }) => c.text)
-              .join('')
-          : msg.content
-      }
-    }
-
-    // ✅ Do NOT stringify tool message content here — we’ll handle it cleanly below
-    if (msg.role === 'tool') {
-      return {
-        id,
-        role: 'tool',
-        content: msg.content
-      }
-    }
-
-    return {
-      id,
-      role: msg.role,
-      content: typeof msg.content === 'string' ? msg.content : ''
-    }
-  })
-
-  // ✅ Write messages (excluding tool result formatting)
-for (const message of finalMessages) {
-  dataStream.write(message)
-}
-
-
-  // ✅ Pull tool result and format it *once*
   const lastToolMsg = responseMessages.find(
     (m: any) =>
       m.role === 'tool' &&
       typeof m.content === 'object' &&
       m.content !== null &&
-      'tool' in m.content &&
       m.content.tool === 'search'
   )
-  
+
   console.log('🧪 lastToolMsg:', lastToolMsg)
 
-  if (addToolResult && lastToolMsg) {
-  const toolData = {
-    role: 'data',
-    content: {
-      tool: 'search',
-      state: 'result',
-      ...(typeof lastToolMsg.content === 'object' ? lastToolMsg.content : {})
-    }
+  if (lastToolMsg && addToolResult) {
+    const toolData = lastToolMsg.content
+    addToolResult(toolData)
+
+    console.log('🧪 Writing to stream:', {
+      id: 'generated-id',
+      role: 'data',
+      content: JSON.stringify(toolData)
+    })
+
+    dataStream.write({
+      id: crypto.randomUUID(),
+      role: 'data',
+      content: JSON.stringify(toolData) // ✅ Must be stringified here
+    })
   }
 
-  console.log('🧪 Sending toolData into addToolResult:', toolData)
-
-  addToolResult(toolData)
-  
-  console.log('🧪 Writing to stream:', {
-  id: 'generated-id',
-  role: 'data',
-  content: JSON.stringify(toolData.content)
-})
-
-  dataStream.write({
-    id: crypto.randomUUID(),
-    role: 'data',
-    content: JSON.stringify(toolData.content) // ✅ this must be a string
-  })
-}
-
-
-  dataStream.close()
+  // ✅ Write non-tool messages
+  for (const message of responseMessages.filter(m => m.role !== 'tool')) {
+    dataStream.write(message)
+  }
 }
