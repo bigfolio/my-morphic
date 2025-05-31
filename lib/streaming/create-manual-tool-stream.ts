@@ -13,6 +13,9 @@ import { BaseStreamConfig } from '@/lib/streaming/types'
 import { searchTool } from '@/lib/tools/search'
 import { HandleStreamFinishParams } from '@/lib/streaming/types'
 
+console.log('🧪 Type Keys:', Object.keys({} as HandleStreamFinishParams))
+
+
 function containsAskQuestionTool(message: CoreMessage) {
   if (message.role !== 'assistant' || !Array.isArray(message.content)) return false
   return message.content.some(
