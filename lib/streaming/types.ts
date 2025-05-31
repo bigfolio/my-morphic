@@ -2,6 +2,7 @@ import { Message } from 'ai'
 import { DataStreamWriter } from 'ai'
 import { Model } from '../types/models'
 
+
 export type BaseStreamConfig = {
   messages: Message[]
   model: Model
