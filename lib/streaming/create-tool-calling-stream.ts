@@ -9,7 +9,7 @@ import {
 import { getMaxAllowedTokens, truncateMessages } from '../utils/context-window'
 import { isReasoningModel } from '../utils/registry'
 import { handleStreamFinish } from './handle-stream-finish'
-import { BaseStreamConfig } from './types'
+import { BaseStreamConfig } from '@/lib/streaming/types'
 import { searchTool } from '@/lib/tools/search'
 
 function containsAskQuestionTool(message: CoreMessage) {
