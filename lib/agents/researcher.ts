@@ -33,7 +33,7 @@ export function researcher({
 }: {
   messages: CoreMessage[]
   model: string
-  searchMode: 'advanced'
+  searchMode?: 'advanced'
 }): ResearcherReturn {
   try {
     const currentDate = new Date().toLocaleString()
