@@ -34,7 +34,7 @@ export function createManualToolStreamResponse(
           getMaxAllowedTokens(model)
         ),
         model: modelId,
-        searchMode
+        searchMode: searchMode === 'advanced' // ✅ convert string to boolean
       })
 
       const result = streamText({
