@@ -11,6 +11,7 @@ import { isReasoningModel } from '../utils/registry'
 import { handleStreamFinish } from './handle-stream-finish'
 import { BaseStreamConfig } from './types'
 import { searchTool } from '@/lib/tools/search'
+import { HandleStreamFinishParams } from './types'
 
 function containsAskQuestionTool(message: CoreMessage) {
   if (message.role !== 'assistant' || !Array.isArray(message.content)) return false

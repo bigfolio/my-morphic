@@ -1,21 +1,20 @@
 import { Message } from 'ai'
+import { DataStreamWriter } from 'ai'
 import { Model } from '../types/models'
 
-
-export interface BaseStreamConfig {
+export type BaseStreamConfig = {
   messages: Message[]
   model: Model
   chatId: string
-  searchMode: boolean
-  addToolResult?: (result: any) => void
+  searchMode?: string
 }
 
-export interface HandleStreamFinishParams {
+export type HandleStreamFinishParams = {
   responseMessages: Message[]
-  originalMessages: Message[]
-  model: string
+  originalMessages: Message[] // ✅ This must be present
+  model: Model
   chatId: string
-  dataStream: any
-  skipRelatedQuestions: boolean
+  dataStream: DataStreamWriter
+  skipRelatedQuestions?: boolean
   addToolResult?: (result: any) => void
 }
