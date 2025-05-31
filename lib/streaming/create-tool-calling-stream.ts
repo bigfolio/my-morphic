@@ -35,10 +35,13 @@ export function createToolCallingStreamResponse(
         )
 
         const researcherConfig = await researcher({
-          messages: truncatedMessages,
-          model: modelId,
-          searchMode
-        })
+  messages: truncateMessages(
+    convertToCoreMessages(messages),
+    getMaxAllowedTokens(model)
+  ),
+  model: modelId,
+  ...(searchMode === 'advanced' ? { searchMode: 'advanced' } : {})
+})
 
         // DEBUG ONLY (optional)
         /*

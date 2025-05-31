@@ -32,13 +32,13 @@ export function createManualToolStreamResponse(
       const modelId = `${model.providerId}:${model.id}`
 
       const researcherConfig = await researcher({
-        messages: truncateMessages(
-          convertToCoreMessages(messages),
-          getMaxAllowedTokens(model)
-        ),
-        model: modelId,
-        searchMode: searchMode === 'advanced' ? 'advanced' : undefined
-      })
+  messages: truncateMessages(
+    convertToCoreMessages(messages),
+    getMaxAllowedTokens(model)
+  ),
+  model: modelId,
+  ...(searchMode === 'advanced' ? { searchMode: 'advanced' } : {})
+})
 
       const result = streamText({
         ...researcherConfig,
