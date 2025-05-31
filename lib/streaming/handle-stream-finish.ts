@@ -3,11 +3,11 @@ import { DataStreamWriter } from 'ai'
 import { BaseStreamConfig } from './types'
 import { HandleStreamFinishParams } from './types'
 
-export type HandleStreamFinishParams = BaseStreamConfig & {
-  responseMessages: Message[]
-  addToolResult?: (result: any) => void
-  dataStream: DataStreamWriter
-}
+//export type HandleStreamFinishParams = BaseStreamConfig & {
+//  responseMessages: Message[]
+ // addToolResult?: (result: any) => void
+//  dataStream: DataStreamWriter
+//}
 
 export async function handleStreamFinish({
   responseMessages,
