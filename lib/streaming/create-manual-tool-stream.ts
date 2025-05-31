@@ -37,7 +37,7 @@ export function createManualToolStreamResponse(
           getMaxAllowedTokens(model)
         ),
         model: modelId,
-        searchMode:(searchMode === 'advanced' ? { searchMode: 'advanced' } : {})
+        ...(searchMode === 'advanced' ? { searchMode: 'advanced' } : {})
       })
 
       const result = streamText({
