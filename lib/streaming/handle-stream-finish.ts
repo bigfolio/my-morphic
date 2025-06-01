@@ -2,6 +2,8 @@ import { Message } from 'ai'
 import { DataStreamWriter } from 'ai'
 import { HandleStreamFinishParams } from './types'
 import { castToStreamChunk } from '../utils/stream'
+import { StreamChunk } from './types'; // adjust path as needed
+
 
 export async function handleStreamFinish({
   responseMessages,
