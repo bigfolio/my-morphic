@@ -16,6 +16,7 @@ export async function handleStreamFinish({
 }: HandleStreamFinishParams) {
   console.log('🚀 handleStreamFinish() was called')
 
+  // 👇 Forcefully cast array to ExtendedMessage[]
   const messages = responseMessages as ExtendedMessage[]
 
   const lastToolMsg = messages.find(
