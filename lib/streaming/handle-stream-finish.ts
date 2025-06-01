@@ -2,9 +2,21 @@ import { DataStreamWriter, Message as BaseMessage } from 'ai'
 import { HandleStreamFinishParams, StreamChunk } from './types'
 import { castToStreamChunk } from '../utils/stream'
 
-// ✅ Extend Message to include custom 'tool' role
+// Extend the Message type to include the custom 'tool' role
 type ToolRole = 'tool'
 type ExtendedMessage = BaseMessage & { role: BaseMessage['role'] | ToolRole }
+
+function serializeMessageToChunk(message: ExtendedMessage): StreamChunk {
+  const prefixMap = {
+    system: 's',
+    user: 'u',
+    assistant: 'a',
+    data: 'd',
+  } as const
+
+  const prefix = prefixMap[message.role as keyof typeof prefixMap] || 'x'
+  return castToStreamChunk(`${prefix}:${JSON.stringify(message)}` as StreamChunk)
+}
 
 export async function handleStreamFinish({
   responseMessages,
@@ -19,15 +31,14 @@ export async function handleStreamFinish({
   console.log('🚀 handleStreamFinish() was called')
 
   const lastToolMsg = responseMessages.find((m) => {
-  const msg = m as any
-  return (
-    msg.role === 'tool' &&
-    typeof msg.content === 'object' &&
-    msg.content !== null &&
-    msg.content.tool === 'search'
-  )
-}) as ExtendedMessage | undefined
-
+    const msg = m as any
+    return (
+      msg.role === 'tool' &&
+      typeof msg.content === 'object' &&
+      msg.content !== null &&
+      msg.content.tool === 'search'
+    )
+  }) as ExtendedMessage | undefined
 
   console.log('🧪 lastToolMsg:', lastToolMsg)
 
@@ -55,7 +66,7 @@ export async function handleStreamFinish({
       message.role === 'assistant' ||
       message.role === 'data'
     ) {
-      dataStream.write(message)
+      dataStream.write(serializeMessageToChunk(message))
     }
   }
 }
