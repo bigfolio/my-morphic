@@ -1,3 +1,4 @@
+import { Message } from 'ai'
 import { DataStreamWriter } from 'ai'
 import { HandleStreamFinishParams, StreamChunk } from './types'
 import { castToStreamChunk } from '../utils/stream'
