@@ -14,7 +14,9 @@ export async function handleStreamFinish({
   chatId,
   dataStream,
   addToolResult
-}: HandleStreamFinishParams & { responseMessages: ExtendedMessage[] }) {
+}: Omit<HandleStreamFinishParams, 'responseMessages'> & {
+  responseMessages: ExtendedMessage[]
+}) {
   console.log('🚀 handleStreamFinish() was called')
 
   const lastToolMsg = responseMessages.find(
