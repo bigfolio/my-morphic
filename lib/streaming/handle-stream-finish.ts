@@ -37,8 +37,15 @@ export async function handleStreamFinish({
       role: 'data',
       content: JSON.stringify(toolData)
     })
+	
+	const toolData = {
+  type: 'imageResults',
+  images: imageResults,
+  toolName: 'searchTool',
+}
 
-dataStream.write(`a:${JSON.stringify(toolData)}`)
+// ✅ Fix: Cast to correct union type to satisfy TypeScript
+dataStream.write(`a:${JSON.stringify(toolData)}` as StreamChunk)
 
   // ✅ Write non-tool messages
   for (const message of responseMessages.filter(m => m.role !== 'tool')) {
