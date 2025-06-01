@@ -48,11 +48,8 @@ export async function handleStreamFinish({
   }
 
   // ✅ Write non-tool messages
- const nonToolMessages = responseMessages.filter(
-  (m): m is ExtendedMessage => (m as ExtendedMessage).role !== 'tool'
-)
-
-for (const message of nonToolMessages) {
-  dataStream.write(message)
-}
+ for (const message of responseMessages as ExtendedMessage[]) {
+  if (message.role !== 'tool') {
+    dataStream.write(message)
+  }
 }
