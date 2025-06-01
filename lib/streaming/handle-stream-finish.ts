@@ -19,7 +19,7 @@ export async function handleStreamFinish({
   // 👇 Forcefully cast array to ExtendedMessage[]
   const messages = responseMessages as ExtendedMessage[]
 
-  interface ToolMessage extends Message {
+ type ToolMessage = {
   role: 'tool'
   content: {
     tool: string
@@ -27,17 +27,15 @@ export async function handleStreamFinish({
   }
 }
 
-const lastToolMsg = (responseMessages as Message[]).find(
+const lastToolMsg = responseMessages.find(
   (m): m is ToolMessage =>
-    (m as ToolMessage).role === 'tool' &&
-    typeof m.content === 'object' &&
-    m.content !== null &&
-    'tool' in m.content
+    (m as any).role === 'tool' &&
+    typeof (m as any).content === 'object' &&
+    (m as any).content !== null &&
+    'tool' in (m as any).content
 )
 
-  console.log('🧪 lastToolMsg:', lastToolMsg)
-
-  if (lastToolMsg && addToolResult) {
+if (lastToolMsg && addToolResult) {
   const toolDataRaw = lastToolMsg.content
   addToolResult(toolDataRaw)
 
@@ -54,6 +52,7 @@ const lastToolMsg = (responseMessages as Message[]).find(
   const chunk = `a:${JSON.stringify(searchToolData)}` as StreamChunk
   dataStream.write(castToStreamChunk(chunk))
 }
+
 
   for (const message of messages) {
     if (message.role !== 'tool') {
