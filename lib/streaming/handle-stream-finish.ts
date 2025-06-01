@@ -38,14 +38,17 @@ export async function handleStreamFinish({
       content: JSON.stringify(toolData)
     })
 
-    const payload = {
-  id: crypto.randomUUID(),
-  role: 'data',
-  content: JSON.stringify(toolData)
-}
-dataStream.write(`data: ${JSON.stringify(payload)}\n\n`)
-
+    if (toolData) {
+  const payload = {
+    id: crypto.randomUUID(),
+    role: 'data',
+    content: JSON.stringify(toolData) // ✅ Content must still be a string
   }
+
+  console.log('🧪 Writing tool result to stream:', payload)
+
+  dataStream.write(payload)
+}
 
   // ✅ Write non-tool messages
   for (const message of responseMessages.filter(m => m.role !== 'tool')) {
