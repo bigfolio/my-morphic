@@ -57,7 +57,7 @@ dataStream.write(`a:${JSON.stringify(searchToolData)}` as any)
     continue
   }
 
-  dataStream.write(`a:${JSON.stringify(message)}`) // ✅ valid stream chunk
+  dataStream.write(`a:${JSON.stringify(message)}` as `a:${string}`)
 }
   }
 }
