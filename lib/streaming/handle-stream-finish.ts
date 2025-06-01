@@ -58,9 +58,11 @@ if (lastToolMsg && addToolResult) {
 
 
 
-  for (const message of messages) {
-    if (message.role !== 'tool') {
-      dataStream.write(message)
-    }
+  const messages = responseMessages as ExtendedMessage[]
+
+for (const message of messages) {
+  if (message.role !== 'tool') {
+    dataStream.write(message)
   }
+}
 }
