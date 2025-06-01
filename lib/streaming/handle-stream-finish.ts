@@ -47,8 +47,8 @@ const searchToolData = {
 dataStream.write(`a:${JSON.stringify(searchToolData)}` as any)
 
     // ✅ Write non-tool messages
-    for (const message of responseMessages) {
-  // Skip message if it's the special search tool message we already handled
+	for (const message of responseMessages) {
+  // Skip tool message (already handled)
   if (
     typeof message.content === 'object' &&
     message.content !== null &&
@@ -57,7 +57,7 @@ dataStream.write(`a:${JSON.stringify(searchToolData)}` as any)
     continue
   }
 
-  dataStream.write(message)
+  dataStream.write(`a:${JSON.stringify(message)}`) // ✅ valid stream chunk
 }
   }
 }
