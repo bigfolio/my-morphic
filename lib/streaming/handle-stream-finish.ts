@@ -1,8 +1,8 @@
-import { castToStreamChunk } from '../utils/stream'
+import { DataStreamWriter, Message } from 'ai'
 import { HandleStreamFinishParams, StreamChunk } from './types'
-import type { Message } from 'ai'
+import { castToStreamChunk } from '../utils/stream'
 
-type ExtendedMessage = Message & {
+export type ExtendedMessage = Message & {
   role: 'system' | 'user' | 'assistant' | 'tool' | 'data'
 }
 
@@ -12,54 +12,48 @@ export async function handleStreamFinish({
   model,
   chatId,
   dataStream,
-  addToolResult
-}: HandleStreamFinishParams) {
+  addToolResult,
+}: Omit<HandleStreamFinishParams, 'responseMessages'> & {
+  responseMessages: ExtendedMessage[]
+}) {
   console.log('🚀 handleStreamFinish() was called')
 
-  // 👇 Forcefully cast array to ExtendedMessage[]
-//  const messages = responseMessages as ExtendedMessage[]
-
- type ToolMessage = {
-  role: 'tool'
-  content: {
-    tool: string
-    [key: string]: any
-  }
-}
-
-const lastToolMsg = responseMessages.find((m) => {
-  return (
-    (m as any).role === 'tool' &&
-    typeof (m as any).content === 'object' &&
-    (m as any).content !== null &&
-    'tool' in (m as any).content
+  const lastToolMsg = responseMessages.find(
+    (m): m is ExtendedMessage =>
+      m.role === 'tool' &&
+      typeof m.content === 'object' &&
+      m.content !== null &&
+      (m.content as any).tool === 'search'
   )
-})
 
-if (lastToolMsg && addToolResult) {
-  const toolDataRaw = (lastToolMsg as any).content
+  console.log('🧪 lastToolMsg:', lastToolMsg)
 
-  addToolResult(toolDataRaw)
+  if (lastToolMsg && addToolResult) {
+    const toolDataRaw = lastToolMsg.content
+    addToolResult(toolDataRaw)
 
-  const toolData =
-    typeof toolDataRaw === 'string'
-      ? JSON.parse(toolDataRaw)
-      : toolDataRaw
+    const toolData =
+      typeof toolDataRaw === 'string' ? JSON.parse(toolDataRaw) : toolDataRaw
 
-  const searchToolData = {
-    type: 'imageResults',
-    images: toolData?.images ?? [],
-    toolName: 'searchTool',
+    const searchToolData = {
+      type: 'imageResults',
+      images: toolData?.images ?? [],
+      toolName: 'searchTool',
+    }
+
+    const chunk = `a:${JSON.stringify(searchToolData)}` as StreamChunk
+    dataStream.write(castToStreamChunk(chunk))
   }
 
-  const chunk = `a:${JSON.stringify(searchToolData)}` as StreamChunk
-  dataStream.write(castToStreamChunk(chunk))
-}
-
-
-for (const message of responseMessages as ExtendedMessage[]) {
-  if (message.role !== 'tool') {
-    dataStream.write(message);
+  // ✅ Now safely loop and write only non-tool messages
+  for (const message of responseMessages) {
+    if (
+      message.role === 'system' ||
+      message.role === 'user' ||
+      message.role === 'assistant' ||
+      message.role === 'data'
+    ) {
+      dataStream.write(message)
+    }
   }
-}
 }
