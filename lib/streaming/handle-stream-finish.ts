@@ -1,9 +1,10 @@
-import { DataStreamWriter, Message } from 'ai'
+import { DataStreamWriter, Message as BaseMessage } from 'ai'
 import { HandleStreamFinishParams, StreamChunk } from './types'
 import { castToStreamChunk } from '../utils/stream'
 
-export type ExtendedMessage = Message & {
-  role: 'system' | 'user' | 'assistant' | 'tool' | 'data'
+// Extend Message to include 'tool' role
+type ExtendedMessage = BaseMessage & {
+  role: BaseMessage['role'] | 'tool'
 }
 
 export async function handleStreamFinish({
@@ -45,7 +46,6 @@ export async function handleStreamFinish({
     dataStream.write(castToStreamChunk(chunk))
   }
 
-  // ✅ Now safely loop and write only non-tool messages
   for (const message of responseMessages) {
     if (
       message.role === 'system' ||
