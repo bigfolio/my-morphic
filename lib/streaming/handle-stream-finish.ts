@@ -27,21 +27,24 @@ export async function handleStreamFinish({
   }
 }
 
-const lastToolMsg = responseMessages.find(
-  (m): m is ToolMessage =>
+const lastToolMsg = responseMessages.find((m) => {
+  return (
     (m as any).role === 'tool' &&
     typeof (m as any).content === 'object' &&
     (m as any).content !== null &&
     'tool' in (m as any).content
-)
+  )
+})
 
 if (lastToolMsg && addToolResult) {
-  const toolDataRaw = lastToolMsg.content
+  const toolDataRaw = (lastToolMsg as any).content
+
   addToolResult(toolDataRaw)
 
-  const toolData = typeof toolDataRaw === 'string'
-    ? JSON.parse(toolDataRaw)
-    : toolDataRaw
+  const toolData =
+    typeof toolDataRaw === 'string'
+      ? JSON.parse(toolDataRaw)
+      : toolDataRaw
 
   const searchToolData = {
     type: 'imageResults',
@@ -52,6 +55,7 @@ if (lastToolMsg && addToolResult) {
   const chunk = `a:${JSON.stringify(searchToolData)}` as StreamChunk
   dataStream.write(castToStreamChunk(chunk))
 }
+
 
 
   for (const message of messages) {
