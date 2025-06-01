@@ -38,11 +38,13 @@ export async function handleStreamFinish({
       content: JSON.stringify(toolData)
     })
 
-    dataStream.write({
-      id: crypto.randomUUID(),
-      role: 'data',
-      content: JSON.stringify(toolData) // ✅ Must be stringified here
-    })
+    const payload = {
+  id: crypto.randomUUID(),
+  role: 'data',
+  content: JSON.stringify(toolData)
+}
+dataStream.write(`data: ${JSON.stringify(payload)}\n\n`)
+
   }
 
   // ✅ Write non-tool messages
