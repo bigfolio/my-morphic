@@ -1,9 +1,8 @@
-import { Message } from 'ai'
 import { DataStreamWriter } from 'ai'
-import { HandleStreamFinishParams, StreamChunk } from './types' // ✅ StreamChunk from types.ts
-import { castToStreamChunk } from '../utils/stream' // ✅ castToStreamChunk from utils/stream
+import { HandleStreamFinishParams, StreamChunk } from './types'
+import { castToStreamChunk } from '../utils/stream'
 
-type ExtendedMessage = Message & {
+export type ExtendedMessage = Message & {
   role: 'system' | 'user' | 'assistant' | 'tool' | 'data'
 }
 
@@ -20,7 +19,7 @@ export async function handleStreamFinish({
   console.log('🚀 handleStreamFinish() was called')
 
   const lastToolMsg = responseMessages.find(
-    (m: any) =>
+    (m) =>
       m.role === 'tool' &&
       typeof m.content === 'object' &&
       m.content !== null &&
@@ -31,11 +30,11 @@ export async function handleStreamFinish({
 
   if (lastToolMsg && addToolResult) {
     const toolDataRaw = lastToolMsg.content
-    addToolResult(toolDataRaw)
-
     const toolData = typeof toolDataRaw === 'string'
       ? JSON.parse(toolDataRaw)
       : toolDataRaw
+
+    addToolResult(toolData)
 
     const searchToolData = {
       type: 'imageResults',
@@ -47,10 +46,9 @@ export async function handleStreamFinish({
     dataStream.write(castToStreamChunk(chunk))
   }
 
-  // ✅ Write non-tool messages
- for (const message of responseMessages as ExtendedMessage[]) {
-  if (message.role !== 'tool') {
-    dataStream.write(message)
+  for (const message of responseMessages) {
+    if (message.role !== 'tool') {
+      dataStream.write(message)
+    }
   }
-}
 }
