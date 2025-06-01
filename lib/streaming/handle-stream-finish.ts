@@ -47,8 +47,17 @@ const searchToolData = {
 dataStream.write(`a:${JSON.stringify(searchToolData)}` as any)
 
     // ✅ Write non-tool messages
-    for (const message of responseMessages.filter(m => m.role !== 'tool')) {
-      dataStream.write(message)
-    }
+    for (const message of responseMessages) {
+  // Skip message if it's the special search tool message we already handled
+  if (
+    typeof message.content === 'object' &&
+    message.content !== null &&
+    (message.content as any).tool === 'search'
+  ) {
+    continue
+  }
+
+  dataStream.write(message)
+}
   }
 }
