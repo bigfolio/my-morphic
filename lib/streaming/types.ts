@@ -2,7 +2,6 @@ import { Message } from 'ai'
 import { DataStreamWriter } from 'ai'
 import { Model } from '../types/models'
 
-
 export type BaseStreamConfig = {
   messages: Message[]
   model: Model
@@ -11,8 +10,8 @@ export type BaseStreamConfig = {
 }
 
 export type HandleStreamFinishParams = {
-  responseMessages: Message[]
-  originalMessages: Message[] // ✅ This must be present
+  responseMessages: ExtendedMessage[]
+  originalMessages: Message[]
   model: Model
   chatId: string
   dataStream: DataStreamWriter
@@ -36,5 +35,9 @@ export type StreamChunk =
   | `f:${string}`
   | `h:${string}`
   | `j:${string}`
-  | `k:${string}`;
+  | `k:${string}`
 
+// ✅ Add this missing type:
+export type ExtendedMessage = Message & {
+  role: 'system' | 'user' | 'assistant' | 'tool' | 'data'
+}

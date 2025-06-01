@@ -1,11 +1,5 @@
-import { Message } from 'ai'
-import { DataStreamWriter } from 'ai'
-import { HandleStreamFinishParams, StreamChunk } from './types'
 import { castToStreamChunk } from '../utils/stream'
-
-export type ExtendedMessage = Message & {
-  role: 'system' | 'user' | 'assistant' | 'tool' | 'data'
-}
+import { HandleStreamFinishParams, StreamChunk, ExtendedMessage } from './types'
 
 export async function handleStreamFinish({
   responseMessages,
@@ -14,28 +8,26 @@ export async function handleStreamFinish({
   chatId,
   dataStream,
   addToolResult
-}: Omit<HandleStreamFinishParams, 'responseMessages'> & {
-  responseMessages: ExtendedMessage[]
-}) {
+}: HandleStreamFinishParams) {
   console.log('🚀 handleStreamFinish() was called')
 
-  const lastToolMsg = (responseMessages as ExtendedMessage[]).find(
-  (m) =>
-    m.role === 'tool' &&
-    typeof m.content === 'object' &&
-    m.content !== null &&
-    (m.content as any).tool === 'search'
-)
+  const lastToolMsg = responseMessages.find(
+    (m) =>
+      m.role === 'tool' &&
+      typeof m.content === 'object' &&
+      m.content !== null &&
+      (m.content as any).tool === 'search'
+  )
 
   console.log('🧪 lastToolMsg:', lastToolMsg)
 
   if (lastToolMsg && addToolResult) {
     const toolDataRaw = lastToolMsg.content
-    const toolData = typeof toolDataRaw === 'string'
-      ? JSON.parse(toolDataRaw)
-      : toolDataRaw
 
-    addToolResult(toolData)
+    addToolResult(toolDataRaw)
+
+    const toolData =
+      typeof toolDataRaw === 'string' ? JSON.parse(toolDataRaw) : toolDataRaw
 
     const searchToolData = {
       type: 'imageResults',
