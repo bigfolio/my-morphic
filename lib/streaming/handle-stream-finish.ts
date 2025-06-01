@@ -23,25 +23,28 @@ export async function handleStreamFinish({
   console.log('🧪 lastToolMsg:', lastToolMsg)
 
   if (lastToolMsg && addToolResult) {
-    const toolData = lastToolMsg.content
-    addToolResult(toolData)
+const toolDataRaw = lastToolMsg.content
+addToolResult(toolDataRaw)
 
-    const imageResults = toolData?.images ?? []
+let toolData: any = toolDataRaw
+if (typeof toolDataRaw === 'string') {
+  try {
+    toolData = JSON.parse(toolDataRaw)
+  } catch (err) {
+    console.error('Failed to parse toolData:', err)
+    toolData = {}
+  }
+}
 
-    const searchToolData = {
-      type: 'imageResults',
-      images: imageResults,
-      toolName: 'searchTool',
-    }
+const imageResults = toolData?.images ?? []
 
-    console.log('🧪 Writing to stream:', {
-      id: 'generated-id',
-      role: 'data',
-      content: JSON.stringify(searchToolData)
-    })
+const searchToolData = {
+  type: 'imageResults',
+  images: imageResults,
+  toolName: 'searchTool',
+}
 
-    // ✅ Fix: Cast to correct union type to satisfy TypeScript
-    dataStream.write(`a:${JSON.stringify(searchToolData)}` as any)
+dataStream.write(`a:${JSON.stringify(searchToolData)}` as any)
 
     // ✅ Write non-tool messages
     for (const message of responseMessages.filter(m => m.role !== 'tool')) {
