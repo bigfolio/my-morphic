@@ -1,22 +1,9 @@
 import { DataStreamWriter, Message as BaseMessage } from 'ai'
-import { HandleStreamFinishParams, StreamChunk } from './types'
-import { castToStreamChunk } from '../utils/stream'
+import { HandleStreamFinishParams } from './types'
+import { serializeMessageToChunk } from '../utils/stream'
 
-// Extend the Message type to include the custom 'tool' role
 type ToolRole = 'tool'
 type ExtendedMessage = BaseMessage & { role: BaseMessage['role'] | ToolRole }
-
-function serializeMessageToChunk(message: ExtendedMessage): StreamChunk {
-  const prefixMap = {
-    system: 's',
-    user: 'u',
-    assistant: 'a',
-    data: 'd',
-  } as const
-
-  const prefix = prefixMap[message.role as keyof typeof prefixMap] || 'x'
-  return castToStreamChunk(`${prefix}:${JSON.stringify(message)}` as StreamChunk)
-}
 
 export async function handleStreamFinish({
   responseMessages,
@@ -28,37 +15,37 @@ export async function handleStreamFinish({
 }: Omit<HandleStreamFinishParams, 'responseMessages'> & {
   responseMessages: ExtendedMessage[]
 }) {
-  console.log('🚀 handleStreamFinish() was called')
+  console.log('🚀 handleStreamFinish() called')
 
-  const lastToolMsg = responseMessages.find((m) => {
-    const msg = m as any
+  const lastToolMsg = responseMessages.find((m): m is ExtendedMessage => {
     return (
-      msg.role === 'tool' &&
-      typeof msg.content === 'object' &&
-      msg.content !== null &&
-      msg.content.tool === 'search'
+      m.role === 'tool' &&
+      typeof m.content === 'object' &&
+      m.content !== null &&
+      (m.content as any).tool === 'search'
     )
-  }) as ExtendedMessage | undefined
+  })
 
   console.log('🧪 lastToolMsg:', lastToolMsg)
 
   if (lastToolMsg && addToolResult) {
-    const toolDataRaw = lastToolMsg.content
-    addToolResult(toolDataRaw)
+    const rawContent = lastToolMsg.content
+    addToolResult(rawContent)
 
-    const toolData =
-      typeof toolDataRaw === 'string' ? JSON.parse(toolDataRaw) : toolDataRaw
+    const parsed =
+      typeof rawContent === 'string' ? JSON.parse(rawContent) : rawContent
 
-    const searchToolData = {
+    const chunkPayload = {
       type: 'imageResults',
-      images: toolData?.images ?? [],
+      images: parsed?.images ?? [],
       toolName: 'searchTool',
     }
 
-    const chunk = `a:${JSON.stringify(searchToolData)}` as StreamChunk
-    dataStream.write(castToStreamChunk(chunk))
+    const chunk = `a:${JSON.stringify(chunkPayload)}` as const
+    dataStream.write(chunk)
   }
 
+  // ✅ Correctly serialize and stream remaining messages
   for (const message of responseMessages) {
     if (
       message.role === 'system' ||
