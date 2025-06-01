@@ -17,7 +17,7 @@ export async function handleStreamFinish({
   console.log('🚀 handleStreamFinish() was called')
 
   // 👇 Forcefully cast array to ExtendedMessage[]
-  const messages = responseMessages as ExtendedMessage[]
+//  const messages = responseMessages as ExtendedMessage[]
 
  type ToolMessage = {
   role: 'tool'
@@ -57,9 +57,9 @@ if (lastToolMsg && addToolResult) {
 }
 
 
-for (const message of messages) {
+for (const message of responseMessages as ExtendedMessage[]) {
   if (message.role !== 'tool') {
-    dataStream.write(message)
+    dataStream.write(message);
   }
 }
 }
