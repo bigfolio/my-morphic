@@ -10,7 +10,7 @@ export type BaseStreamConfig = {
 }
 
 export type HandleStreamFinishParams = {
-  responseMessages: ExtendedMessage[]
+  responseMessages: Message[]
   originalMessages: Message[]
   model: Model
   chatId: string

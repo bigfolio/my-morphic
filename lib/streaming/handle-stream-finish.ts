@@ -1,5 +1,10 @@
 import { castToStreamChunk } from '../utils/stream'
-import { HandleStreamFinishParams, StreamChunk, ExtendedMessage } from './types'
+import { HandleStreamFinishParams, StreamChunk } from './types'
+import type { Message } from 'ai'
+
+type ExtendedMessage = Message & {
+  role: 'system' | 'user' | 'assistant' | 'tool' | 'data'
+}
 
 export async function handleStreamFinish({
   responseMessages,
@@ -11,7 +16,9 @@ export async function handleStreamFinish({
 }: HandleStreamFinishParams) {
   console.log('🚀 handleStreamFinish() was called')
 
-  const lastToolMsg = responseMessages.find(
+  const messages = responseMessages as ExtendedMessage[]
+
+  const lastToolMsg = messages.find(
     (m) =>
       m.role === 'tool' &&
       typeof m.content === 'object' &&
@@ -23,11 +30,11 @@ export async function handleStreamFinish({
 
   if (lastToolMsg && addToolResult) {
     const toolDataRaw = lastToolMsg.content
-
     addToolResult(toolDataRaw)
 
-    const toolData =
-      typeof toolDataRaw === 'string' ? JSON.parse(toolDataRaw) : toolDataRaw
+    const toolData = typeof toolDataRaw === 'string'
+      ? JSON.parse(toolDataRaw)
+      : toolDataRaw
 
     const searchToolData = {
       type: 'imageResults',
@@ -39,7 +46,7 @@ export async function handleStreamFinish({
     dataStream.write(castToStreamChunk(chunk))
   }
 
-  for (const message of responseMessages) {
+  for (const message of messages) {
     if (message.role !== 'tool') {
       dataStream.write(message)
     }
