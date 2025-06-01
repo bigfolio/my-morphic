@@ -57,7 +57,7 @@ dataStream.write(`a:${JSON.stringify(searchToolData)}` as any)
     continue
   }
 
-  type StreamChunk =
+dataStream.write(`a:${JSON.stringify(message)}` as
   | `a:${string}`
   | `i:${string}`
   | `b:${string}`
@@ -74,9 +74,6 @@ dataStream.write(`a:${JSON.stringify(searchToolData)}` as any)
   | `h:${string}`
   | `j:${string}`
   | `k:${string}`
-
-dataStream.write(`a:${JSON.stringify(message)}` as StreamChunk)
-
-}
+)
   }
 }
