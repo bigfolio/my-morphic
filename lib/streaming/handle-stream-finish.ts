@@ -48,7 +48,9 @@ dataStream.write(
   }
 
   // ✅ Write non-tool messages
-  for (const message of responseMessages.filter(m => m.role !== 'tool')) {
-    dataStream.write(message)
-  }
+  for (const message of responseMessages.filter((m) =>
+  typeof m.role === 'string' && m.role !== 'tool'
+)) {
+  dataStream.write(message);
+}
 }
