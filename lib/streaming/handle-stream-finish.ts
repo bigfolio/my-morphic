@@ -36,7 +36,7 @@ const imageResults = toolData?.images ?? []
 
 const searchToolData = {
   type: 'imageResults',
-  images: imageResults,
+  images: toolData?.images ?? [],
   toolName: 'searchTool',
 }
 
