@@ -44,6 +44,8 @@ export async function handleStreamFinish({
   toolName: 'searchTool',
 }
 
+const imageResults = toolData?.images ?? [];
+
 // ✅ Fix: Cast to correct union type to satisfy TypeScript
 dataStream.write(`a:${JSON.stringify(searchToolData)}` as StreamChunk)
 
