@@ -1,6 +1,5 @@
 import { Message } from 'ai'
 import { DataStreamWriter } from 'ai'
-import { BaseStreamConfig } from './types'
 import { HandleStreamFinishParams } from './types'
 
 //export type HandleStreamFinishParams = BaseStreamConfig & {
