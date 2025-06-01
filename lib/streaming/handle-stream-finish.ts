@@ -1,6 +1,7 @@
 import { Message } from 'ai'
 import { DataStreamWriter } from 'ai'
 import { HandleStreamFinishParams } from './types'
+import { castToStreamChunk } from '../utils/stream'
 
 export async function handleStreamFinish({
   responseMessages,
@@ -23,58 +24,25 @@ export async function handleStreamFinish({
   console.log('🧪 lastToolMsg:', lastToolMsg)
 
   if (lastToolMsg && addToolResult) {
-const toolDataRaw = lastToolMsg.content
-addToolResult(toolDataRaw)
+    const toolData = lastToolMsg.content
+    addToolResult(toolData)
 
-let toolData: any = toolDataRaw
-if (typeof toolDataRaw === 'string') {
-  try {
-    toolData = JSON.parse(toolDataRaw)
-  } catch (err) {
-    console.error('Failed to parse toolData:', err)
-    toolData = {}
-  }
-}
+    const imageResults = toolData?.images ?? []
 
-const imageResults = toolData?.images ?? []
+    const searchToolData = {
+      type: 'imageResults',
+      images: imageResults,
+      toolName: 'searchTool',
+    }
 
-const searchToolData = {
-  type: 'imageResults',
-  images: imageResults,
-  toolName: 'searchTool',
-}
-
-dataStream.write(`a:${JSON.stringify(searchToolData)}` as any)
-
-    // ✅ Write non-tool messages
-	for (const message of responseMessages) {
-  // Skip tool message (already handled)
-  if (
-    typeof message.content === 'object' &&
-    message.content !== null &&
-    (message.content as any).tool === 'search'
-  ) {
-    continue
+    // ✅ Send the tool result as a stream chunk
+    dataStream.write(
+      castToStreamChunk(`a:${JSON.stringify(searchToolData)}`)
+    )
   }
 
-dataStream.write(`a:${JSON.stringify(message)}` as
-  | `a:${string}`
-  | `i:${string}`
-  | `b:${string}`
-  | `0:${string}`
-  | `2:${string}`
-  | `3:${string}`
-  | `g:${string}`
-  | `8:${string}`
-  | `9:${string}`
-  | `c:${string}`
-  | `d:${string}`
-  | `e:${string}`
-  | `f:${string}`
-  | `h:${string}`
-  | `j:${string}`
-  | `k:${string}`
-)
+  // ✅ Write non-tool messages
+  for (const message of responseMessages.filter(m => m.role !== 'tool')) {
+    dataStream.write(message)
   }
-}
 }
