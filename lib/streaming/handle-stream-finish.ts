@@ -2,12 +2,6 @@ import { Message } from 'ai'
 import { DataStreamWriter } from 'ai'
 import { HandleStreamFinishParams } from './types'
 
-//export type HandleStreamFinishParams = BaseStreamConfig & {
-//  responseMessages: Message[]
- // addToolResult?: (result: any) => void
-//  dataStream: DataStreamWriter
-//}
-
 export async function handleStreamFinish({
   responseMessages,
   originalMessages,
@@ -32,26 +26,26 @@ export async function handleStreamFinish({
     const toolData = lastToolMsg.content
     addToolResult(toolData)
 
+    const imageResults = toolData?.images ?? []
+
+    const searchToolData = {
+      type: 'imageResults',
+      images: imageResults,
+      toolName: 'searchTool',
+    }
+
     console.log('🧪 Writing to stream:', {
       id: 'generated-id',
       role: 'data',
-      content: JSON.stringify(toolData)
+      content: JSON.stringify(searchToolData)
     })
-	
-	const searchToolData = {
-  type: 'imageResults',
-  images: imageResults,
-  toolName: 'searchTool',
-}
 
-const imageResults = toolData?.images ?? [];
+    // ✅ Fix: Cast to correct union type to satisfy TypeScript
+    dataStream.write(`a:${JSON.stringify(searchToolData)}` as any)
 
-// ✅ Fix: Cast to correct union type to satisfy TypeScript
-dataStream.write(`a:${JSON.stringify(searchToolData)}` as StreamChunk)
-
-  // ✅ Write non-tool messages
-  for (const message of responseMessages.filter(m => m.role !== 'tool')) {
-    dataStream.write(message)
+    // ✅ Write non-tool messages
+    for (const message of responseMessages.filter(m => m.role !== 'tool')) {
+      dataStream.write(message)
+    }
   }
-}
 }
