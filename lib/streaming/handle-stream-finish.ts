@@ -1,9 +1,11 @@
 import { Message } from 'ai'
 import { DataStreamWriter } from 'ai'
-import { HandleStreamFinishParams } from './types'
-import { castToStreamChunk } from '../utils/stream'
-import { StreamChunk } from './types'; // adjust path as needed
+import { HandleStreamFinishParams, StreamChunk } from './types' // ✅ StreamChunk from types.ts
+import { castToStreamChunk } from '../utils/stream' // ✅ castToStreamChunk from utils/stream
 
+type ExtendedMessage = Message & {
+  role: 'system' | 'user' | 'assistant' | 'tool' | 'data'
+}
 
 export async function handleStreamFinish({
   responseMessages,
@@ -12,7 +14,7 @@ export async function handleStreamFinish({
   chatId,
   dataStream,
   addToolResult
-}: HandleStreamFinishParams) {
+}: HandleStreamFinishParams & { responseMessages: ExtendedMessage[] }) {
   console.log('🚀 handleStreamFinish() was called')
 
   const lastToolMsg = responseMessages.find(
@@ -27,30 +29,24 @@ export async function handleStreamFinish({
 
   if (lastToolMsg && addToolResult) {
     const toolDataRaw = lastToolMsg.content
-addToolResult(toolDataRaw)
+    addToolResult(toolDataRaw)
 
-// ✅ Parse it if it's a string (extra safety)
-const toolData = typeof toolDataRaw === 'string'
-  ? JSON.parse(toolDataRaw)
-  : toolDataRaw
+    const toolData = typeof toolDataRaw === 'string'
+      ? JSON.parse(toolDataRaw)
+      : toolDataRaw
 
-const imageResults = toolData?.images ?? []
+    const searchToolData = {
+      type: 'imageResults',
+      images: toolData?.images ?? [],
+      toolName: 'searchTool',
+    }
 
-const searchToolData = {
-  type: 'imageResults',
-  images: toolData?.images ?? [],
-  toolName: 'searchTool',
-}
-
-dataStream.write(
-  castToStreamChunk(`a:${JSON.stringify(searchToolData)}` as StreamChunk)
-)
+    const chunk = `a:${JSON.stringify(searchToolData)}` as StreamChunk
+    dataStream.write(castToStreamChunk(chunk))
   }
 
   // ✅ Write non-tool messages
-  for (const message of responseMessages.filter((m) =>
-  typeof m.role === 'string' && m.role !== 'tool'
-)) {
-  dataStream.write(message);
-}
+  for (const message of responseMessages.filter(m => m.role !== 'tool')) {
+    dataStream.write(message)
+  }
 }
