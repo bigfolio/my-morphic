@@ -19,33 +19,41 @@ export async function handleStreamFinish({
   // 👇 Forcefully cast array to ExtendedMessage[]
   const messages = responseMessages as ExtendedMessage[]
 
-  const lastToolMsg = messages.find(
-    (m) =>
-      m.role === 'tool' &&
-      typeof m.content === 'object' &&
-      m.content !== null &&
-      (m.content as any).tool === 'search'
-  )
+  interface ToolMessage extends Message {
+  role: 'tool'
+  content: {
+    tool: string
+    [key: string]: any
+  }
+}
+
+const lastToolMsg = (responseMessages as Message[]).find(
+  (m): m is ToolMessage =>
+    (m as ToolMessage).role === 'tool' &&
+    typeof m.content === 'object' &&
+    m.content !== null &&
+    'tool' in m.content
+)
 
   console.log('🧪 lastToolMsg:', lastToolMsg)
 
   if (lastToolMsg && addToolResult) {
-    const toolDataRaw = lastToolMsg.content
-    addToolResult(toolDataRaw)
+  const toolDataRaw = lastToolMsg.content
+  addToolResult(toolDataRaw)
 
-    const toolData = typeof toolDataRaw === 'string'
-      ? JSON.parse(toolDataRaw)
-      : toolDataRaw
+  const toolData = typeof toolDataRaw === 'string'
+    ? JSON.parse(toolDataRaw)
+    : toolDataRaw
 
-    const searchToolData = {
-      type: 'imageResults',
-      images: toolData?.images ?? [],
-      toolName: 'searchTool',
-    }
-
-    const chunk = `a:${JSON.stringify(searchToolData)}` as StreamChunk
-    dataStream.write(castToStreamChunk(chunk))
+  const searchToolData = {
+    type: 'imageResults',
+    images: toolData?.images ?? [],
+    toolName: 'searchTool',
   }
+
+  const chunk = `a:${JSON.stringify(searchToolData)}` as StreamChunk
+  dataStream.write(castToStreamChunk(chunk))
+}
 
   for (const message of messages) {
     if (message.role !== 'tool') {
