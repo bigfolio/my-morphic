@@ -24,21 +24,25 @@ export async function handleStreamFinish({
   console.log('🧪 lastToolMsg:', lastToolMsg)
 
   if (lastToolMsg && addToolResult) {
-    const toolData = lastToolMsg.content
-    addToolResult(toolData)
+    const toolDataRaw = lastToolMsg.content
+addToolResult(toolDataRaw)
 
-    const imageResults = toolData?.images ?? []
+// ✅ Parse it if it's a string (extra safety)
+const toolData = typeof toolDataRaw === 'string'
+  ? JSON.parse(toolDataRaw)
+  : toolDataRaw
 
-    const searchToolData = {
-      type: 'imageResults',
-      images: imageResults,
-      toolName: 'searchTool',
-    }
+const imageResults = toolData?.images ?? []
 
-    // ✅ Send the tool result as a stream chunk
-    dataStream.write(
-      castToStreamChunk(`a:${JSON.stringify(searchToolData)}`)
-    )
+const searchToolData = {
+  type: 'imageResults',
+  images: imageResults,
+  toolName: 'searchTool',
+}
+
+dataStream.write(
+  castToStreamChunk(`a:${JSON.stringify(searchToolData)}`)
+)
   }
 
   // ✅ Write non-tool messages
