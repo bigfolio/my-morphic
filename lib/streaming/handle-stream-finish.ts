@@ -41,7 +41,7 @@ const searchToolData = {
 }
 
 dataStream.write(
-  castToStreamChunk(`a:${JSON.stringify(searchToolData)}`)
+  castToStreamChunk(`a:${JSON.stringify(searchToolData)}` as StreamChunk)
 )
   }
 
