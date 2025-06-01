@@ -57,7 +57,26 @@ dataStream.write(`a:${JSON.stringify(searchToolData)}` as any)
     continue
   }
 
-  dataStream.write(`a:${JSON.stringify(message)}` as `a:${string}`)
+  type StreamChunk =
+  | `a:${string}`
+  | `i:${string}`
+  | `b:${string}`
+  | `0:${string}`
+  | `2:${string}`
+  | `3:${string}`
+  | `g:${string}`
+  | `8:${string}`
+  | `9:${string}`
+  | `c:${string}`
+  | `d:${string}`
+  | `e:${string}`
+  | `f:${string}`
+  | `h:${string}`
+  | `j:${string}`
+  | `k:${string}`
+
+dataStream.write(`a:${JSON.stringify(message)}` as StreamChunk)
+
 }
   }
 }
