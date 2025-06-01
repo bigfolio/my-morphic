@@ -19,14 +19,15 @@ export async function handleStreamFinish({
   console.log('🚀 handleStreamFinish() was called')
 
   const lastToolMsg = responseMessages.find((m) => {
-    const msg = m as ExtendedMessage
-    return (
-      msg.role === 'tool' &&
-      typeof msg.content === 'object' &&
-      msg.content !== null &&
-      (msg.content as any).tool === 'search'
-    )
-  }) as ExtendedMessage | undefined
+  const msg = m as any
+  return (
+    msg.role === 'tool' &&
+    typeof msg.content === 'object' &&
+    msg.content !== null &&
+    msg.content.tool === 'search'
+  )
+}) as ExtendedMessage | undefined
+
 
   console.log('🧪 lastToolMsg:', lastToolMsg)
 
