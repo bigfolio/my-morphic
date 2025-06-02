@@ -1,6 +1,6 @@
 import { DataStreamWriter, Message } from 'ai'
-import { HandleStreamFinishParams } from './types'
-import { serializeMessageToChunk } from '../utils/stream'
+import { HandleStreamFinishParams, StreamChunk } from './types'
+import { serializeMessageToChunk, castToStreamChunk } from '../utils/stream'
 
 export async function handleStreamFinish({
   responseMessages,
@@ -38,8 +38,8 @@ export async function handleStreamFinish({
       toolName: 'searchTool',
     }
 
-    const chunk = `a:${JSON.stringify(chunkPayload)}` as const
-    dataStream.write(chunk)
+    const chunkString = `a:${JSON.stringify(chunkPayload)}`
+    dataStream.write(castToStreamChunk(chunkString)) // ✅ This ensures type safety
   }
 
   for (const message of responseMessages) {
@@ -49,8 +49,7 @@ export async function handleStreamFinish({
       message.role === 'assistant' ||
       message.role === 'data'
     ) {
-      const chunk = serializeMessageToChunk(message)
-      dataStream.write(chunk)
+      dataStream.write(serializeMessageToChunk(message))
     }
   }
 }
