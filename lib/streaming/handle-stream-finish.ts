@@ -1,9 +1,6 @@
-import { DataStreamWriter, Message as BaseMessage } from 'ai'
+import { DataStreamWriter, Message } from 'ai'
 import { HandleStreamFinishParams } from './types'
 import { serializeMessageToChunk } from '../utils/stream'
-
-type ToolRole = 'tool'
-type ExtendedMessage = BaseMessage & { role: BaseMessage['role'] | ToolRole }
 
 export async function handleStreamFinish({
   responseMessages,
@@ -13,13 +10,13 @@ export async function handleStreamFinish({
   dataStream,
   addToolResult,
 }: Omit<HandleStreamFinishParams, 'responseMessages'> & {
-  responseMessages: ExtendedMessage[]
+  responseMessages: Message[]
 }) {
   console.log('🚀 handleStreamFinish() called')
 
-  const lastToolMsg = responseMessages.find((m): m is ExtendedMessage => {
+  const lastToolMsg = responseMessages.find((m) => {
     return (
-      m.role === 'tool' &&
+      (m as any).role === 'tool' &&
       typeof m.content === 'object' &&
       m.content !== null &&
       (m.content as any).tool === 'search'
@@ -45,7 +42,6 @@ export async function handleStreamFinish({
     dataStream.write(chunk)
   }
 
-  // ✅ Correctly serialize and stream remaining messages
   for (const message of responseMessages) {
     if (
       message.role === 'system' ||
@@ -53,7 +49,8 @@ export async function handleStreamFinish({
       message.role === 'assistant' ||
       message.role === 'data'
     ) {
-      dataStream.write(serializeMessageToChunk(message))
+      const chunk = serializeMessageToChunk(message)
+      dataStream.write(chunk)
     }
   }
 }
