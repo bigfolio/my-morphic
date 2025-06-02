@@ -39,6 +39,7 @@ export async function handleStreamFinish({
     }
 
     const chunkString = `a:${JSON.stringify(chunkPayload)}`;
+	console.log(`Chunk String: ${chunkString}`);
 // Ensure the prefix is valid
 // Make sure the chunkString matches the expected format
 if (!/^([0-9a-k]):.+/.test(chunkString)) {
@@ -47,7 +48,7 @@ if (!/^([0-9a-k]):.+/.test(chunkString)) {
 
 // Cast to StreamChunk only after confirming the format
 console.log(`Chunk String: ${chunkString}`);
-dataStream.write(chunkString as StreamChunk); 
+dataStream.write(castToStreamChunk(chunkString));
   }
 
   for (const message of responseMessages) {
