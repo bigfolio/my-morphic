@@ -38,8 +38,14 @@ export async function handleStreamFinish({
       toolName: 'searchTool',
     }
 
-    const chunkString = `a:${JSON.stringify(chunkPayload)}`
-    dataStream.write(castToStreamChunk(chunkString)) // ✅ This ensures type safety
+    const chunkString = `a:${JSON.stringify(chunkPayload)}`;
+// Ensure the prefix is valid
+if (!['a'].includes(chunkString.split(':')[0])) {
+  throw new Error('Invalid prefix');
+}
+
+// Cast to StreamChunk only after confirming the format
+dataStream.write(castToStreamChunk(chunkString)); 
   }
 
   for (const message of responseMessages) {
