@@ -9,6 +9,9 @@
     "start": "next start",
     "lint": "next lint"
   },
+  "engines": {
+	"node": "18.x"
+  },
   "dependencies": {
     "@ai-sdk/anthropic": "^1.2.10",
     "@ai-sdk/azure": "^1.1.5",

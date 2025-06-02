@@ -9,12 +9,13 @@ export function castToStreamChunk(chunk: string): StreamChunk {
     '0', '2', '3', 'a', 'b', 'i', 'g', '8', '9', 'c', 'd', 'e', 'f', 'h', 'j', 'k'
   ]);
   
+  if (!validPrefixes.has(prefix)) {
+    throw new Error(`Invalid stream prefix: ${prefix}`);
+  }  
+  
   // Log the chunk to ensure it's being split correctly
   console.log(`Received chunk: ${chunk}`);
 
-  if (!validPrefixes.has(prefix)) {
-    throw new Error(`Invalid stream prefix: ${prefix}`);
-  }
 
   // Double-check the structure here
   if (!/^[a-z0-9]:.+$/.test(chunk)) {
