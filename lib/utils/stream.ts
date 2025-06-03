@@ -21,7 +21,8 @@ export function castToStreamChunk(chunk: string): StreamChunk {
   // Log the chunk to ensure it's being split correctly
   console.log(`Received chunk: ${chunk}`);
 
-  return chunk; // Now TypeScript knows this is a valid StreamChunk
+  // Return the chunk as a valid StreamChunk, bypassing the string type check
+  return chunk as StreamChunk; // Explicitly cast to StreamChunk
 }
 
 // Function to serialize messages to StreamChunk
