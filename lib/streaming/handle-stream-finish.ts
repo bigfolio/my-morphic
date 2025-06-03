@@ -40,9 +40,9 @@ export async function handleStreamFinish({
 
     const chunkString = `a:${JSON.stringify(chunkPayload)}`;
 	console.log(`Chunk String: ${chunkString}`);
-// Ensure the prefix is valid
-// Make sure the chunkString matches the expected format
-if (!/^([0-9a-k]):.+/.test(chunkString)) {
+
+// Ensure the chunk format is valid
+if (!isStreamChunk(chunkString)) {
   throw new Error("Invalid chunk format");
 }
 
