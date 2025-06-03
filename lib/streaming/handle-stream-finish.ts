@@ -48,7 +48,8 @@ if (!isStreamChunk(chunkString)) {
 
 // Cast to StreamChunk only after confirming the format
 console.log(`Chunk String: ${chunkString}`);
-dataStream.write(castToStreamChunk(chunkString));
+//dataStream.write(castToStreamChunk(chunkString));
+ dataStream.write(chunkString as StreamChunk);
   }
 
   for (const message of responseMessages) {
