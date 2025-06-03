@@ -1,6 +1,6 @@
 import { DataStreamWriter, Message } from 'ai'
 import { HandleStreamFinishParams, StreamChunk } from './types'
-import { serializeMessageToChunk, castToStreamChunk } from '../utils/stream'
+import { serializeMessageToChunk, castToStreamChunk, isStreamChunk } from '../utils/stream'
 
 export async function handleStreamFinish({
   responseMessages,
